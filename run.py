@@ -1,13 +1,7 @@
-#import os
 import sys 
 import json
-#import argparse 
-#import azureml.core
-#from azureml.core import Workspace
-#from pathlib import Path
 from scripts.azure_utils import get_auth, setContext, getWorkspace, getExperiment, registerModel, createImage, createComputeCluster, attachExistingCluster, createWebservice
 from scripts.general_utils import loadArguments
-
 from azureml.core.image import ContainerImage
 
 
@@ -191,6 +185,16 @@ class Context:
         if self.webservice:
             prediction = self.webservice.run(json.dumps({"name": "Dave"}))
             print(prediction)
+
+
+
+
+
+
+
+
+
+
 '''
     Get the program arguments and user authentication into the context
 '''
