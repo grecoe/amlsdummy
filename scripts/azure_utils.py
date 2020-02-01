@@ -9,25 +9,16 @@ from azureml.core import Experiment
 from azureml.core import Model
 from azureml.core.image import ContainerImage
 
+from azureml.core.compute import AksCompute, ComputeTarget
+from azureml.core.webservice import Webservice, AksWebservice
+from azureml.core.conda_dependencies import CondaDependencies
+
 from azureml.core.authentication import ServicePrincipalAuthentication
 from azureml.core.authentication import AzureCliAuthentication
 from azureml.core.authentication import InteractiveLoginAuthentication
 from azureml.core.authentication import AuthenticationException
 
-from azureml.core.conda_dependencies import CondaDependencies
-
 from scripts.general_utils import createPickle
-
-'''
-def text_to_json(text):
-    return json.dumps({'input': '{0}'.format(text)})
-
-
-def write_json_to_file(json_dict, filename, mode='w'):
-    with open(filename, mode) as outfile:
-        json.dump(json_dict, outfile, indent=4, sort_keys=True)
-        outfile.write('\n\n')
-'''
 
 def get_auth():
     auth = None
@@ -156,6 +147,8 @@ def createImage(workspace, scoring_file, model, image_name ):
     conda_pack = []
     requirements = ["azureml-defaults==1.0.57", "azureml-contrib-services"]
 
+    print("Creating image...")
+
     simple_environment = CondaDependencies.create(conda_packages=conda_pack, pip_packages=requirements)
 
     with open("simple.yml", "w") as f:
@@ -178,6 +171,94 @@ def createImage(workspace, scoring_file, model, image_name ):
     )
 
     image.wait_for_creation(show_output = True)
-    print("IMAGE/VERSION: " , image.name, image.version)
+    print("Image created IMAGE/VERSION: " , image.name, '/',  image.version)
     
     return image
+
+def createComputeCluster(workspace, region, cluster_name, compute_sku, node_count):
+    '''
+        Create new AKS cluster, except if one exists with the same name. 
+    '''
+
+    aks_target = None
+
+    '''
+        Get any existing targets and if one exists with the same name 
+        just use that. 
+    '''
+    targets = ComputeTarget.list(workspace)
+    if len(targets) > 0:
+        for target in targets:
+            if target.name == cluster_name:
+                print("Found existing cluster with name ", cluster_name)
+                aks_target = target
+                break
+
+    if aks_target == None:
+        print("Creating new AKS compute.....")
+        prov_config = AksCompute.provisioning_configuration(
+            agent_count = node_count, 
+            vm_size = compute_sku, 
+            location = region
+            )
+ 
+        aks_target = ComputeTarget.create(
+            workspace = workspace, 
+            name = cluster_name, 
+            provisioning_configuration = prov_config
+        )
+
+        aks_target.wait_for_completion(show_output = True)
+
+        aks_status = aks_target.get_status()
+        assert aks_status == 'Succeeded'
+
+    return aks_target
+
+def attachExistingCluster(workspace, cluster_name, resource_group, compute_name):
+    '''
+        Add an existing AKS, probably what we need for CMK clusters.
+    '''
+    print("Attaching existing AKS compute.....")
+
+    attach_config = AksCompute.attach_configuration(
+        resource_group = resource_group,
+        cluster_name = cluster_name
+        )
+    
+    aks_target = None
+    
+    if attach_config:
+        aks_target = ComputeTarget.attach(workspace, compute_name, attach_config)
+
+    return aks_target
+
+def createWebservice(workspace, container_image, service_name, replica_count, cores_count, compute_target):
+    '''
+        Create AKS cluster
+    '''
+    web_service = None
+
+    services = Webservice.list(workspace = workspace, image_name = container_image.name)
+    if len(services) > 0:
+        for svc in services:
+            if svc.name == service_name and svc.num_replicas == replica_count:
+                print("Returning existing deployed web service ....")
+                web_service = svc
+                break
+
+    if web_service == None:
+        print("Creating new web service.....")
+        aks_config = AksWebservice.deploy_configuration(num_replicas=replica_count, cpu_cores=cores_count)
+
+        web_service = Webservice.deploy_from_image(
+            workspace = workspace,
+            name = service_name,
+            image = container_image,
+            deployment_config = aks_config,
+            deployment_target = compute_target,
+            )
+    
+        web_service.wait_for_deployment(show_output=True)
+
+    return web_service
