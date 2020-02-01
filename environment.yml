@@ -1,0 +1,13 @@
+name: SimpleModel
+channels:
+  - conda-forge
+dependencies:
+  - python=3.6.2
+  - pip
+  - scikit-learn
+  - urllib3
+  - pip:    
+    - azure-cli
+    - prompt_toolkit
+    - azureml-sdk[notebooks]==1.0.57
+    - azure-core
