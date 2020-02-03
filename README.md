@@ -11,8 +11,17 @@ You will need
 - Azure Subscription 
 - Azure Machine Learning compute cores
 - Windows or Linux box to run the project
+    - If running on Windows you will not be able to test the docker container locally as the image is Linux based. However, you'll still be able to create and deploy a service.
 
-NOTE: Re-running the code over and over will not produce anything outside of the original scope. At each step before the model, container image, aks service, or REST endpoint is created, the Azure Machine Learning workspace is scanned for the item. If it exists, no new service is created. 
+#### Linux only
+To test the container image you have to perform the following commands from the bash shell.
+
+```
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+<b>NOTE</b>: Re-running the code over and over will not produce anything outside of the original scope. At each step before the model, container image, aks service, or REST endpoint is created, the Azure Machine Learning workspace is scanned for the item. If it exists, no new service is created. 
 
 ### API Input
 This example produces a REST API with the expected input:
