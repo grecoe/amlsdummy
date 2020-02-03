@@ -175,24 +175,27 @@ def createImage(workspace, scoring_file, model, image_name ):
     
     return image
 
-def createComputeCluster(workspace, region, cluster_name, compute_sku, node_count):
-    '''
-        Create new AKS cluster, except if one exists with the same name. 
-    '''
+def _getExistingCompute(workspace, compute_name):
+    existing_compute = None
 
-    aks_target = None
-
-    '''
-        Get any existing targets and if one exists with the same name 
-        just use that. 
-    '''
     targets = ComputeTarget.list(workspace)
     if len(targets) > 0:
         for target in targets:
-            if target.name == cluster_name:
-                print("Found existing cluster with name ", cluster_name)
-                aks_target = target
+            if target.name == compute_name:
+                print("Found existing compute with name ", compute_name)
+                existing_compute = target
                 break
+
+    return existing_compute
+
+def createComputeCluster(workspace, region, compute_name, compute_sku, node_count):
+    '''
+        Create new AKS cluster, except if one exists with the same name. 
+
+        Check for existence with _getExistingCompute()
+    '''
+
+    aks_target = _getExistingCompute(workspace, compute_name)
 
     if aks_target == None:
         print("Creating new AKS compute.....")
@@ -204,7 +207,7 @@ def createComputeCluster(workspace, region, cluster_name, compute_sku, node_coun
  
         aks_target = ComputeTarget.create(
             workspace = workspace, 
-            name = cluster_name, 
+            name = compute_name, 
             provisioning_configuration = prov_config
         )
 
@@ -218,18 +221,22 @@ def createComputeCluster(workspace, region, cluster_name, compute_sku, node_coun
 def attachExistingCluster(workspace, cluster_name, resource_group, compute_name):
     '''
         Add an existing AKS, probably what we need for CMK clusters.
+
+        If a compute already exists with the name compute_name in the workspace
+        just use it. Otherwise attach it.
     '''
     print("Attaching existing AKS compute.....")
 
-    attach_config = AksCompute.attach_configuration(
-        resource_group = resource_group,
-        cluster_name = cluster_name
-        )
+    aks_target = _getExistingCompute(workspace, compute_name)
+
+    if aks_target == None:
+        attach_config = AksCompute.attach_configuration(
+            resource_group = resource_group,
+            cluster_name = cluster_name
+            )
     
-    aks_target = None
-    
-    if attach_config:
-        aks_target = ComputeTarget.attach(workspace, compute_name, attach_config)
+        if attach_config:
+            aks_target = ComputeTarget.attach(workspace, compute_name, attach_config)
 
     return aks_target
 
