@@ -242,7 +242,18 @@ def attachExistingCluster(workspace, cluster_name, resource_group, compute_name)
 
 def createWebservice(workspace, container_image, service_name, replica_count, cores_count, compute_target):
     '''
-        Create AKS cluster
+        Create the Web Service to host the model so we can call it. 
+
+        By default this appears to be an open (non secure) endponit. A description on how to 
+        secure the endpoint can be found here:
+
+        https://docs.microsoft.com/en-us/azure/machine-learning/how-to-secure-web-service
+
+        Further documetation on how to update the service can be found here:
+
+        https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.webservice(class)?view=azure-ml-py
+
+        That is, you use the update() call on the service to SSL enable it. 
     '''
     web_service = None
 
