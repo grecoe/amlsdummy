@@ -2,12 +2,17 @@ import json
 
 def init():
     '''
-        We really have nothing to do here....this is JUST to get this 
-        out. We won't need anything really other than python to run it. 
+        Called when an instance of the container is stood up. 
+
+        Typically this is where the model file (pkl) is deserialized, 
+        but for this example we aren't even going to use it. 
     '''
     pass
 
 def run(raw_data):
+    '''
+        Entry point for REST API when calling the service.
+    '''
     try:
         name = json.loads(raw_data)["name"]
         return json.dumps({"GoAway": name + "'s not here....."})
@@ -15,27 +20,12 @@ def run(raw_data):
         result = str(e)
         return json.dumps({"error": result})
 
+
 if __name__ == "__main__":
-    
+    '''
+        Test the funcitonality when file run
+        on it's own.
+    '''
     init()
     result = run(json.dumps( {"name": "Dave"}))
     print("RESULT:", result)
-'''
-import pickle, json
-from azureml.core.model import Model
-
-def init():
-    global pi_estimate
-    model_path = Model.get_model_path(model_name = "pi_estimate")
-    with open(model_path, "rb") as f:
-        pi_estimate = float(pickle.load(f))
-
-def run(raw_data):
-    try:
-        radius = json.loads(raw_data)["radius"]
-        result = pi_estimate * radius**2
-        return json.dumps({"area": result})
-    except Exception as e:
-        result = str(e)
-        return json.dumps({"error": result})
-'''

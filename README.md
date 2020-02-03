@@ -28,8 +28,10 @@ This example produces a REST API with the expected input:
 
 |||
 |----|----|
+|ACTION|POST|
 |URL| URL of the web service|
-|API KEY| As bearer token in request headers|
+|API KEY| As bearer token in request headers <br> EX: Authorization : Bearer KEY|
+|CONTENT-TYPE|application/json|
 |BODY|Simple JSON body:
 ```
 {
@@ -44,6 +46,8 @@ The API returns a simple JSON structure in the form:
 }
 ```
 Where [name] is the input value. 
+
+Service code that generates the response is in scoring.py.
 
 ### Execution Steps
 1. Clone this repo to your machine
@@ -85,3 +89,20 @@ Where [name] is the input value.
     - If the service doessn't exist, a new one is created and added to the Context object.
 8. The web service is tested and the result is printed to the console along with the connection info for the service, i.e. URI and KEY. When this succeeds, you can take that connection info and use it elsewhere. 
     - If you don't record the API information, you can simply re-run this script and it will be collected for you without creating any new objects/resources (assuming you have not changed the configuration)
+
+## Load Testing
+Once the endpoint has been published with run.py you should have the API URL and KEY printed out to the console. 
+
+Use these values to then call the loadtest.py file and load test your endpoint. 
+
+You pass in parameters to this file to have it execute the endpoint you just published with run.py. 
+
+The script is actually fairly flexible and with minor changes for payload, you could use this script against almost any endpoint. 
+
+### loadtest.py Parameters
+|||
+|---|---|
+|u|Web service URL|
+|k|Web service API Key|
+|t|Number of threads to spawn.|
+|k|Number of calls (iterations) that each thread should make before returning.|
