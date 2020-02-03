@@ -61,7 +61,13 @@ Service code that generates the response is in scoring.py.
 5. When done, delete the resource group identified in the program arguments
     - scripts\general_utils.py :: loadArguments()
 
-## Run.py Steps
+## Script: run.py
+This is the main Python script to create everythign from the resource group -> REST endpoint. 
+
+It uses configuration parameters (as noted above) as to where to create the Azure services as well as any other configuration settings that can be used. 
+
+Further, it utilizes the scoring.py file as the script that sits behind the REST andpoint. 
+
 1. Create the context object
 2. Generate an Azure Machine Learning Service Workspace
     - If workspace already exists by name in the sub with the provided resource group, that workspace it will be added to the Context object. 
@@ -90,7 +96,7 @@ Service code that generates the response is in scoring.py.
 8. The web service is tested and the result is printed to the console along with the connection info for the service, i.e. URI and KEY. When this succeeds, you can take that connection info and use it elsewhere. 
     - If you don't record the API information, you can simply re-run this script and it will be collected for you without creating any new objects/resources (assuming you have not changed the configuration)
 
-## Load Testing
+## Script: loatest.py 
 Once the endpoint has been published with run.py you should have the API URL and KEY printed out to the console. 
 
 Use these values to then call the loadtest.py file and load test your endpoint. 
