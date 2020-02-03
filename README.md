@@ -105,4 +105,4 @@ The script is actually fairly flexible and with minor changes for payload, you c
 |u|Web service URL|
 |k|Web service API Key|
 |t|Number of threads to spawn.|
-|k|Number of calls (iterations) that each thread should make before returning.|
+|i|Number of calls (iterations) that each thread should make before returning.|
