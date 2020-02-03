@@ -5,11 +5,11 @@ This code creates a simple Azure Machine Learning web service.
 
 The code can be run on Windows or Linux, but if run on Windows you cannot test the docker container image locally. That is the only restriction.
 
-The project creates a no-op ML service that simply returns a string message to the user. That is, the ML model backing it is a NO-OP. It was created simply to go through all of the motions of creating a model, registering it, creating a container, creating an AKS compute cluster, and finally, deploying it as a REST endpoing. 
+The project creates a no-op ML service that simply returns a string message to the user. That is, the ML model backing it is a NO-OP. It was created simply to go through all of the motions of creating a model, registering it, creating a container, creating an AKS compute cluster, and finally, deploying it as a REST endpoint. 
 
 You will need
 - Azure Subscription 
-- Azure Machine Learning compute cores
+- Azure VM Cores (Standard DSv2, and at least 24) available in the region you choose for deployment.
 - Windows or Linux box to run the project
     - If running on Windows you will not be able to test the docker container locally as the image is Linux based. However, you'll still be able to create and deploy a service.
 
