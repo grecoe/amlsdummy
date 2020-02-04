@@ -1,0 +1,20 @@
+{
+    "subid" : "String - [Your Azure Subscription ID]",
+    "resourceGroup" : "String -[Azure Resource Group Name - New or Existing]",
+    "region" : "String -[Azure Region to Deploy, example: eastus]",
+    "workspace" : "String -[Name of Azure Machine Learning workspace to create or attach to]",
+    "experiment" : "String -[Azure Machine Learning Experiment name]",
+    "model_name" : "String -[Azure Machine Learning model name]",
+    "image_name" : "String -[Docker Container Image Name]",
+    "aks_compute_name" : "String -[Azure Machine Learning Comput Name]",
+    "aks_service_name" : "String -[Azure Machine Learning Web Service name]",
+    "aks_non_prod" : "Boolean (or string True, False)- Determines if the cluster is created/attached with DEV_TEST configuration",
+    "aks_existing_cluster" : "String - [Name of existing cluster to attach, if creating new set this to None]",
+    "aks_existing_rg" : "String - [Name of existing cluster resource group to attach, if creating new set this to None]",
+    "aks_vm_size" : "String = [SKU name of the machines to create in a NEW cluster]",
+    "aks_node_count" : "int = [Number of VMs to add in a NEW cluster]",
+    "aks_num_replicas" : "int - [Number of instances of container to create on cluster for Web Service]",
+    "aks_cpu_cores" : "int - [Number of cores to associate with each container for Web Service]"
+}
+
+

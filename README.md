@@ -3,17 +3,40 @@
 
 This code creates a simple Azure Machine Learning web service. 
 
-The code can be run on Windows or Linux, but if run on Windows you cannot test the docker container image locally. That is the only restriction.
+The code can be run on Windows or Linux. The only restriction with Windows is that you cannot test the docker container image locally. 
 
-The project creates a no-op ML service that simply returns a string message to the user. That is, the ML model backing it is a NO-OP. It was created simply to go through all of the motions of creating a model, registering it, creating a container, creating an AKS compute cluster, and finally, deploying it as a REST endpoint. 
+The project creates a no-op Machine Learning WebService that simply returns a string message to the user. That is, the ML model backing it is a NO-OP. It was created simply to go through all of the motions of creating a model, registering it, creating a container, creating an AKS compute cluster, and finally, deploying it as a REST endpoint. 
 
 You will need
+- A devlopment environment with anaconda installed. 
 - Azure Subscription 
 - Azure VM Cores (Standard DSv2, and at least 24) available in the region you choose for deployment.
 - Windows or Linux box to run the project
     - If running on Windows you will not be able to test the docker container locally as the image is Linux based. However, you'll still be able to create and deploy a service.
 
-#### Linux only
+#### Prerequisites
+1. Clone this repo to your machine
+2. Create the conda environment
+    - conda env create -f environment.yml
+    - conda activate SimpleModel
+3. Modify whatever settings you need. There are several ways to supply configuration for the main script. Read the file CONFIGURATION.md for details.
+4. Run run.py with your chosen configuration to create the solution
+5. When done, delete the resource group you identified in your choice of settings.
+
+## Repository Content
+|Item|Type|Description|
+|----|----|-----------|
+|scripts|Directory|Contains utility scripts for loading configuration and making the actual Azure SDK calls.|
+|CONFIGURATION.md|File|Describes the different ways to provide configuration settings to the main script (run.py)|
+|configuration.json|File|Example configuration file as described in CONFIGURATION.md.|
+|environment.yml|File|Environment file to feed to conda to create the development environment to run this project.|
+|run.py|File|The main script that will perform all of the creation steps of the Azure Machine Learning workspace from resource group creation through to the deployment of an Azure Machine Learning Real Time Scoring service.|
+|scoring.py|File|This file is used when creating the Azure Machine Learning Real Time Scoring service and does not need altering in any way.|
+|loadtest.py|file|Secondary script to test your public Azure Machine Learning Real Time Scoring service in a load test type of way.|
+
+## Development Notes
+
+### Linux only
 To test the container image you have to perform the following commands from the bash shell.
 
 ```
@@ -23,7 +46,7 @@ newgrp docker
 
 <b>NOTE</b>: Re-running the code over and over will not produce anything outside of the original scope. At each step before the model, container image, aks service, or REST endpoint is created, the Azure Machine Learning workspace is scanned for the item. If it exists, no new service is created. 
 
-### API Input
+### Deployed API Input/Return
 This example produces a REST API with the expected input:
 
 |||
@@ -49,24 +72,16 @@ Where [name] is the input value.
 
 Service code that generates the response is in scoring.py.
 
-### Execution Steps
-1. Clone this repo to your machine
-2. Create the conda environment
-    - conda env create -f environment.yml
-    - conda activate SimpleModel
-3. Modify whatever settings you need in
-    - scripts\general_utils.py :: loadArguments()
-    - Static class definitions in run.py :: class Context
-4. Run run.py to create the solution
-5. When done, delete the resource group identified in the program arguments
-    - scripts\general_utils.py :: loadArguments()
+# Scripts
 
 ## Script: run.py
 This is the main Python script to create everythign from the resource group -> REST endpoint. 
 
 It uses configuration parameters (as noted above) as to where to create the Azure services as well as any other configuration settings that can be used. 
 
-Further, it utilizes the scoring.py file as the script that sits behind the REST andpoint. 
+Configuration parameters can be provided in several ways, read CONFIGURATION.md to determine the best way to provide parameters for your needs. 
+
+Further, it utilizes the scoring.py file as the script that sits behind the REST endpoint. 
 
 1. Create the context object
 2. Generate an Azure Machine Learning Service Workspace

@@ -1,6 +1,3 @@
-import re
-import math
-import gzip
 import requests
 import json
 import os
@@ -8,16 +5,13 @@ from azureml.core import Workspace
 from azureml.core import Experiment
 from azureml.core import Model
 from azureml.core.image import ContainerImage
-
 from azureml.core.compute import AksCompute, ComputeTarget
 from azureml.core.webservice import Webservice, AksWebservice
 from azureml.core.conda_dependencies import CondaDependencies
-
 from azureml.core.authentication import ServicePrincipalAuthentication
 from azureml.core.authentication import AzureCliAuthentication
 from azureml.core.authentication import InteractiveLoginAuthentication
 from azureml.core.authentication import AuthenticationException
-
 from scripts.general_utils import createPickle
 
 def get_auth():
@@ -55,7 +49,15 @@ def getWorkspace(authentication, subscription_id, resource_group, workspace_name
     '''
     return_workspace = None
     useExistingWorkspace = False
-    workspaces = Workspace.list(subscription_id, authentication, resource_group )
+    workspaces = None
+    
+    '''
+        If resource group doesn't exist, this wil throw a ProjectSystemException  
+    '''
+    try:
+        workspaces = Workspace.list(subscription_id, authentication, resource_group )
+    except Exception as ex:
+        workspaces = None
 
     '''
         See if it already exists
@@ -102,6 +104,7 @@ def getExperiment(workspace, experiment_name):
             found = True
             return_experiment = experiment
 
+    
     if not found:
         print("Creating new experiment", experiment_name)
         return_experiment = Experiment(workspace, experiment_name)
@@ -188,21 +191,34 @@ def _getExistingCompute(workspace, compute_name):
 
     return existing_compute
 
-def createComputeCluster(workspace, region, compute_name, compute_sku, node_count):
+def _getClusterPurpose(dev_test):
+    '''
+        For an explaination on this field, see:
+
+        https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.compute.aks.akscompute.clusterpurpose?view=azure-ml-py
+    '''
+    purpose = AksCompute.ClusterPurpose.FAST_PROD
+    if dev_test:
+        purpose = AksCompute.ClusterPurpose.DEV_TEST
+    return purpose
+
+
+def createComputeCluster(workspace, region, compute_name, compute_sku, node_count, dev_cluster):
     '''
         Create new AKS cluster, except if one exists with the same name. 
 
         Check for existence with _getExistingCompute()
     '''
-
+    purpose = _getClusterPurpose(dev_cluster)
     aks_target = _getExistingCompute(workspace, compute_name)
-
+    
     if aks_target == None:
         print("Creating new AKS compute.....")
         prov_config = AksCompute.provisioning_configuration(
             agent_count = node_count, 
             vm_size = compute_sku, 
-            location = region
+            location = region,
+            cluster_purpose = purpose
             )
  
         aks_target = ComputeTarget.create(
@@ -218,7 +234,7 @@ def createComputeCluster(workspace, region, compute_name, compute_sku, node_coun
 
     return aks_target
 
-def attachExistingCluster(workspace, cluster_name, resource_group, compute_name):
+def attachExistingCluster(workspace, cluster_name, resource_group, compute_name, dev_cluster):
     '''
         Add an existing AKS, probably what we need for CMK clusters.
 
@@ -227,12 +243,14 @@ def attachExistingCluster(workspace, cluster_name, resource_group, compute_name)
     '''
     print("Attaching existing AKS compute.....")
 
+    purpose = _getClusterPurpose(dev_cluster)
     aks_target = _getExistingCompute(workspace, compute_name)
 
     if aks_target == None:
         attach_config = AksCompute.attach_configuration(
             resource_group = resource_group,
-            cluster_name = cluster_name
+            cluster_name = cluster_name,
+            cluster_purpose = purpose
             )
     
         if attach_config:
@@ -242,18 +260,7 @@ def attachExistingCluster(workspace, cluster_name, resource_group, compute_name)
 
 def createWebservice(workspace, container_image, service_name, replica_count, cores_count, compute_target):
     '''
-        Create the Web Service to host the model so we can call it. 
-
-        By default this appears to be an open (non secure) endponit. A description on how to 
-        secure the endpoint can be found here:
-
-        https://docs.microsoft.com/en-us/azure/machine-learning/how-to-secure-web-service
-
-        Further documetation on how to update the service can be found here:
-
-        https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.webservice(class)?view=azure-ml-py
-
-        That is, you use the update() call on the service to SSL enable it. 
+        Create AKS cluster
     '''
     web_service = None
 

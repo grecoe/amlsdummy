@@ -1,11 +1,10 @@
 import sys 
 import json
 import platform
-from scripts.azure_utils import get_auth, setContext, getWorkspace, getExperiment, registerModel, createImage, createComputeCluster, attachExistingCluster, createWebservice
+from scripts.azure_utils import *
 from scripts.general_utils import loadArguments
 
 from azureml.core.image import ContainerImage
-
 
 class Context:
     '''
@@ -112,6 +111,16 @@ class Context:
                 print("Found existing image, loading...")
                 self.containerImage = containers[-1]
 
+        if self.containerImage != None:
+            '''
+                With CMK testing, we really need to check this....it's possible an image 
+                was attempted but the actual build failed as it happens on ACR. This means
+                that AMLS will record that it has an image, but the image state comes back
+                failed. 
+            '''
+            if self.containerImage.creation_state == "Failed":
+                raise Exception("Image exists but state is failed, terminating process...")
+
         return self.containerImage != None
 
     def testImage(self):
@@ -142,19 +151,23 @@ class Context:
             return self.computeTarget
 
         if cluster_name is None and resource_group is None:
+            print("Option is to create new compute target....")
             self.computeTarget = createComputeCluster(
                 self.workspace, 
                 self.programArguments.region, 
-                self.programArguments.aks_name, 
+                self.programArguments.aks_compute_name, 
                 self.programArguments.aks_vm_size, 
-                self.programArguments.aks_node_count
+                self.programArguments.aks_node_count,
+                self.programArguments.aks_non_prod
                 )
         else:
+            print("Option is to attach existing compute target....")
             self.computeTarget = attachExistingCluster(
                 self.workspace, 
                 cluster_name, 
                 resource_group, 
-                self.programArguments.aks_name
+                self.programArguments.aks_compute_name,
+                self.programArguments.aks_non_prod
                 )
 
         if not self.computeTarget:
@@ -244,15 +257,12 @@ class Context:
 '''
 
 
-
-
 '''
     Get the program arguments and user authentication into the context
 '''
 programargs = loadArguments(sys.argv[1:]) 
 userAuth = get_auth()
 program_context = Context(programargs, userAuth)
-
 
 '''
     Get a workspace
@@ -276,13 +286,19 @@ if program_context.loadImage() == False:
     program_context.generateImage()
     program_context.testImage()
 
+
+
 '''
     Create/attach existing compute target
 
     To attach, you have to provide the cluster name and resource group name
-    Create service
+    in the program arguments. By default they are set to None so that a new cluster
+    is generated.
 '''
-program_context.generateComputeTarget()
+program_context.generateComputeTarget(
+     cluster_name = program_context.programArguments.aks_existing_cluster,
+     resource_group = program_context.programArguments.aks_existing_rg
+     )
 
 '''
     Create service
