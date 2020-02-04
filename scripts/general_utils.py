@@ -12,6 +12,9 @@ def _loadConfiguration(configuration_file):
         The settings for the program will strictly be loaded from the configuration
         file, bypassing any other provided arguments AND the default settings in 
         loadArguments()
+
+        When reading in a json null, Python converts it to the string None. Make 
+        sure we catch these. 
     '''
     return_settings = []
     config_json = None
@@ -20,11 +23,15 @@ def _loadConfiguration(configuration_file):
             with open(configuration_file,"r") as input_config:
                 config_content = input_config.read()
                 config_json = json.loads(config_content)
-    
+
     for key in config_json:
         return_settings.append('-' + key)
-        return_settings.append(str(config_json[key]))
-        
+        value = config_json[key]
+        if value == None or value == 'None':
+            return_settings.append(None)
+        else:
+            return_settings.append(str(value))
+
     return return_settings
 
 def loadArguments(sys_args):
@@ -117,7 +124,19 @@ def loadArguments(sys_args):
     parser.add_argument("-aks_num_replicas", required=False, default=2, type=int, help="AKS replica count of generated container.") 
     parser.add_argument("-aks_cpu_cores", required=False, default=1, type=int, help="Number of cores to allocate to each replica") 
 
-    return parser.parse_args(sys_args)
+    parsed_arguments = parser.parse_args(sys_args)
+
+    '''
+        For some reason, when loading from JSON and leaving None in the 
+        input array for parser.parse_args, those values are getting turned 
+        into the String None, correct that here.
+    '''
+    for attr, value in parsed_arguments.__dict__.items():
+        if value == 'None':
+            setattr(parsed_arguments, attr, None)
+
+
+    return parsed_arguments
 
 def createPickle(file_name):
     '''

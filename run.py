@@ -214,46 +214,10 @@ class Context:
     Also note, each step needs to be performed in order (listed here) so that the appropriate objects/services
     are collected before trying to use them. 
 
-    Steps that occur:
-    1. Create the context object
-    2. Generate an Azure Machine Learning Service Workspace
-        - If workspace already exists by name in the sub with the provided resource group, 
-          that workspace it will be added to the Context object. 
-        - If it doesn't exist it is created and added to the Context object.
-    3. Generate the AMLS Experiment
-        - If the experiment exists in the workspace by name, it will be added to the Context object.
-        - If the experiment doesn't exist it is created and added to the Context object..
-    4. Create a model
-        This is really a no-op model. A pkl file is generated from nothing useful, but the 
-        model file is required to create a container.
-        - If the model already exists by name it will be added to the Context object
-        - If it doesn't exist, a simple pkl file is generated and registered as a new model. The 
-          result is added to the Context object.
-    5. Create a conatiner image. 
-        - Attempts to load a container image associated with the current workspace. 
-            - If found, it is added to the Context object
-            - If not found, creates a new container image and adds it to the Context object.
-                - It is ok to just create new images, it just updates the version in the ACR
-                - Once the image is created, attempts to test the container image locally. However
-                  this is a Linux based image so if the current system is not Linux test will 
-                  not run. 
-    6. Creates or attaches a compute target (in this case AKS)
-        - If you have a cluster alreayd, use the function Context.generateComputeTarget by supplying 
-          the cluster name and resource group. The existing cluster is then added to the Context object.
-        - If you need a new cluster, leave those fields blank and:
-            - If a compute with the same name is already associated with the workspace, that compute 
-              is added to the Context object.
-            - If a compute doesn't exist, it is created and added to the Context object.
-    7. Create the web service to serve up the REST api endpoint.
-        - If a service already exists in the workspace for the expected container image name, that 
-          service is added to the Context object.
-        - If the service doessn't exist, a new one is created and added to the Context object.
-    8. The web service is tested and the result is printed to the console along with the connection
-       info for the service, i.e. URI and KEY. When this succeeds, you can take that connection info
-       and use it elsewhere. 
-        - If you don't record the API information, you can simply re-run this script and it will be collected
-          for you without creating any new objects/resources (assuming you have not changed the configuration)
+    For details about the steps performed read:
 
+    https://github.com/grecoe/amlsdummy#script-runpy
+  
 '''
 
 
@@ -285,8 +249,6 @@ program_context.generateModel()
 if program_context.loadImage() == False:
     program_context.generateImage()
     program_context.testImage()
-
-
 
 '''
     Create/attach existing compute target
