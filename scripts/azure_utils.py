@@ -267,7 +267,7 @@ def createWebservice(workspace, container_image, service_name, replica_count, co
     services = Webservice.list(workspace = workspace, image_name = container_image.name)
     if len(services) > 0:
         for svc in services:
-            if svc.name == service_name and svc.num_replicas == replica_count:
+            if svc.name == service_name:
                 print("Returning existing deployed web service ....")
                 web_service = svc
                 break
