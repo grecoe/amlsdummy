@@ -1,23 +1,14 @@
-# Simple Models
+# Real Time Scoring Example
 <sup> Daniel Grecoe - A Microsoft Employee</sup>
 
-The code in this repository can create Azure Machine Learning services. There are two flavors of these:
-1. Real Time Scoring web service
-2. Batch Scoring service
+This code creates an Azure Machine Learning Real Time Scoring service. The code in this repository can be run on Windows or Linux. The only restriction with Windows is that you cannot test the docker container image locally on the real time scoring path. 
 
-
-The code can be run on Windows or Linux. The only restriction with Windows is that you cannot test the docker container image locally on the real time scoring path. 
-
-## TBD - Explain projects briefly
 The project creates a no-op Machine Learning WebService that simply returns a string message to the user. That is, the ML model backing it is a NO-OP. It was created simply to go through all of the motions of creating a model, registering it, creating a container, creating an AKS compute cluster, and finally, deploying it as a REST endpoint. 
-## TBD - Explain projects briefly
-
 
 You will need
 - A devlopment environment with anaconda installed. 
 - Azure Subscription 
 - Azure VM Cores (Standard DSv2, and at least 24) available in the region you choose for deployment for the real time scoring path.
-- Azure VM Machine Learning Cores for the batch scoring path. 
 - Windows or Linux box to run the project
     - If running on Windows you will not be able to test the docker container locally as the image is Linux based. However, you'll still be able to create and deploy a service.
 
@@ -26,38 +17,24 @@ You will need
 2. Create the conda environment
     - conda env create -f environment.yml
     - conda activate SimpleModel
-3. Modify whatever settings you need. There are several ways to supply configuration for the main script. 
-    - If following the real time scoring path, read the file RTSCONFIGURATION.md for details.
-    - If following the batch scoring path, read the file BTCHCONFIGURATION.md for details.
-4. Run the main script for your path.
-    - If following the real time scoring path, run rtscreate.py with your chosen configuration to create the solution.
-    - If following the batch scoring path, run btchcreate.py with your chosen configuration to create the solution.
+3. Modify whatever settings you need. There are several ways to supply configuration for the main script, details are in the rtsconfiguraiton.md file. . 
+4. Run the main script for your path - rtscreate.py with your chosen configuraiton to create the solution..
 5. When done, delete the resource group you identified in your choice of settings.
 
-## Repository Content
+## Real Time Scoring Repository Content
 |Item|Type|Description|
 |----|----|-----------|
 |contexts|Directory|Contains implementations of Real Time Scoring and Batch Scoring models.|
 |scripts|Directory|Contains utility scripts for loading configuration and making the actual Azure SDK calls.|
 |environment.yml|File|Environment file to feed to conda to create the development environment to run this project.|
-|||
-|Real Time Scoring||
-|||
-|RTSCONFIGURATION.md|File|Describes the different ways to provide configuration settings to the main script real time scoring (rtscreate.py)|
+|rtsconfiguration.md|File|Describes the different ways to provide configuration settings to the main script real time scoring (rtscreate.py)|
 |rtsconfiguration.json|File|Example configuration file as described in CONFIGURATION.md.|
 |rtscreate.py|File|The main script that will perform all of the creation steps of the Azure Machine Learning workspace from resource group creation through to the deployment of an Azure Machine Learning Real Time Scoring service.|
 |scoring.py|File|This file is used when creating the Azure Machine Learning Real Time Scoring service and does not need altering in any way.|
 |rtsloadtest.py|file|Secondary script to test your public Azure Machine Learning Real Time Scoring service in a load test type of way.|
-|||
-|Batch Scoring||
-|||
-|BTCHCONFIGURATION.md|File|Describes the different ways to provide configuration settings to the main batch scoring script (btchcreate.py)|
-|btchconfiguration.json|File|Example configuration file as described in BTCHCONFIGURATION.md.|
-|btchcreate.py|File|The main script that will perform all of the creation steps of the Azure Machine Learning workspace from resource group creation through to the deployment of an Azure Machine Learning Real batch scoring pipeline.|
 
-## Development Notes
 
-### Linux only - Real Time Scoring Only
+### Linux only 
 To test the container image you have to perform the following commands from the bash shell.
 
 ```
@@ -148,9 +125,3 @@ The script is actually fairly flexible and with minor changes for payload, you c
 |k|Web service API Key|
 |t|Number of threads to spawn.|
 |i|Number of calls (iterations) that each thread should make before returning.|
-
-# Batch Scoring Scripts
-
-## Script: btchcreate.py
-
-## TBD
