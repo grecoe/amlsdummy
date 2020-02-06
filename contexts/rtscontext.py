@@ -1,12 +1,7 @@
-import sys 
-import json
-import platform
 from scripts.azure_utils import *
-from scripts.general_utils import loadArguments
+from contexts.basecontext import BaseContext
 
-from azureml.core.image import ContainerImage
-
-class Context:
+class RealTimeScoringContext(BaseContext):
     '''
         Model file and scoring script. These are constants and 
         probably no need to update them. 
@@ -21,52 +16,11 @@ class Context:
         Contains the context needed to perform the tasks. 
     '''
     def __init__(self, programArgs, userAuthorization):
-        self.programArguments = programArgs
-        self.authentication = userAuthorization
-        self.platform = platform.system().lower()
-        self.workspace = None
-        self.experiment = None
-        self.model = None
+        super().__init__(programArgs, userAuthorization)
         self.containerImage = None
         self.computeTarget = None
         self.webservice = None
         self.webserviceapi = {}
-        
-
-        if not self.authentication:
-            raise Exception("Authentication object missing")
-
-        '''
-            Change the context to the provided subscription id
-            This expects that an az login has already occured with a user
-            that has the correct credentials.
-        '''
-        setContext(self.programArguments.subid)
-
-    def generateWorkspace(self):
-        '''
-            Gets an existing workspace (by name) or creates a new one
-        '''
-        
-        self.workspace = getWorkspace(
-            self.authentication, 
-            self.programArguments.subid, 
-            self.programArguments.resourceGroup,
-            self.programArguments.workspace,
-            self.programArguments.region
-            )
-
-        if not self.workspace:
-            raise Exception("Workspace Creation Failed")
-
-    def generateExperiment(self):
-        '''
-            Get an existing experiment by name, or create new
-        '''
-        self.experiment = getExperiment(self.workspace, self.programArguments.experiment)
-
-        if not self.experiment:
-            raise Exception("Experiment Creation Failed")
 
     def generateModel(self):
         '''
@@ -76,11 +30,11 @@ class Context:
             self.workspace,
             self.experiment,
             self.programArguments.model_name,
-            Context.model_file
+            RealTimeScoringContext.model_file
             )
 
         if not self.model:
-            raise Exception("Model Creation Failed")
+            raise Exception("Model Creation Failed")        
 
     def generateImage(self):
         '''
@@ -91,7 +45,7 @@ class Context:
         '''
         self.containerImage = createImage(
             self.workspace,
-            Context.scoring_script,
+            RealTimeScoringContext.scoring_script,
             self.model,
             self.programArguments.image_name)
 
@@ -106,7 +60,7 @@ class Context:
             if it loads then we've already done that step.
         '''
         if not self.containerImage:
-            containers = ContainerImage.list(workspace=program_context.workspace, image_name = self.programArguments.image_name)
+            containers = ContainerImage.list(workspace= self.workspace, image_name = self.programArguments.image_name)
             if len(containers) > 0:
                 print("Found existing image, loading...")
                 self.containerImage = containers[-1]
@@ -129,7 +83,7 @@ class Context:
         '''   
         if self.platform == 'linux':
             if not self.containerImage:
-                containers = ContainerImage.list(workspace=program_context.workspace, image_name = self.programArguments.image_name)
+                containers = ContainerImage.list(workspace=self.workspace, image_name = self.programArguments.image_name)
                 if len(containers) > 0:
                     self.containerImage = containers[-1]
         
@@ -197,74 +151,3 @@ class Context:
         if self.webservice:
             prediction = self.webservice.run(json.dumps({"name": "Dave"}))
             print(prediction)
-
-
-
-'''
-    Program Code:
-
-    Program will use settings from general_utils.py where user can optionally pass in parameters or 
-    use the defaults set up. Those parameters and the user authentication are held in the Context class
-    defined above. 
-
-    Since this can be run in steps to slowly build up the service (as I did when creating this), each step
-    validates if the object or service needs to be created. If it already exists (generally based on name)
-    a new object/service is not created and the existing object/service is preserved in the Context class.
-
-    Also note, each step needs to be performed in order (listed here) so that the appropriate objects/services
-    are collected before trying to use them. 
-
-    For details about the steps performed read:
-
-    https://github.com/grecoe/amlsdummy#script-runpy
-  
-'''
-
-
-'''
-    Get the program arguments and user authentication into the context
-'''
-programargs = loadArguments(sys.argv[1:]) 
-userAuth = get_auth()
-program_context = Context(programargs, userAuth)
-
-'''
-    Get a workspace
-'''
-program_context.generateWorkspace()
-
-'''
-    Get or create an experiment
-'''
-program_context.generateExperiment()
-
-'''
-    Get existing or create and register model
-'''
-program_context.generateModel()
-
-'''
-    Create or update the container image
-'''
-if program_context.loadImage() == False:
-    program_context.generateImage()
-    program_context.testImage()
-
-'''
-    Create/attach existing compute target
-
-    To attach, you have to provide the cluster name and resource group name
-    in the program arguments. By default they are set to None so that a new cluster
-    is generated.
-'''
-program_context.generateComputeTarget(
-     cluster_name = program_context.programArguments.aks_existing_cluster,
-     resource_group = program_context.programArguments.aks_existing_rg
-     )
-
-'''
-    Create service
-'''
-program_context.generateWebService()
-print(program_context.webserviceapi)
-program_context.testWebService()

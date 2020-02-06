@@ -3,5 +3,6 @@ scripts/__pycache__/
 simple.yml
 model.pkl
 david/
-dantest.json
+dantestrts.json
+dantestbatch.json
 dr-ml-cmk-v6-eastus.json

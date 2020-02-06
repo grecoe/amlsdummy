@@ -5,7 +5,7 @@ from azureml.core import Workspace
 from azureml.core import Experiment
 from azureml.core import Model
 from azureml.core.image import ContainerImage
-from azureml.core.compute import AksCompute, ComputeTarget
+from azureml.core.compute import AksCompute, AmlCompute, ComputeTarget
 from azureml.core.webservice import Webservice, AksWebservice
 from azureml.core.conda_dependencies import CondaDependencies
 from azureml.core.authentication import ServicePrincipalAuthentication
@@ -15,6 +15,14 @@ from azureml.core.authentication import AuthenticationException
 from scripts.general_utils import createPickle
 
 def get_auth():
+    '''
+        Retreive the user authentication. If they aren't logged in this will
+        prompt the standard interactive login method. 
+
+        PARAMS: None
+
+        RETURNS: Authentication object
+    '''
     auth = None
     
     print("Get auth...")
@@ -27,32 +35,51 @@ def get_auth():
     return auth
 
 def setContext(subscription_id):
-    set_command = "az account set --subscription " + subscription_id
+    '''
+        Using the 'az account set' api, change the current subscription
+        context to the requested subscription so that future calls happen
+        in the requested subscription. 
+
+        PARAMS: 
+            subscription_id : String : Azure Subscription ID
+
+        RETURNS: NONE
+
+        THROWS:
+            Exception if output is not empty. As of the writing of this 
+            a succesful call has no output. 
+    '''
     print("Setting context....")
+
+    set_command = "az account set --subscription " + subscription_id
     stream = os.popen(set_command)
     output = stream.read()
-    assert(len(output) == 0)
+
+    if len(output) != 0:
+        raise Exception("Context Exception : " + output)
 
 def getWorkspace(authentication, subscription_id, resource_group, workspace_name,  workspace_region):
     '''
-        Obtains an existing workspace, or creates a new one. If a workspace exists with the same
-        name it is returned, otherwise, a new one is created.
+        Obtains an existing workspace, or creates a new one. If a workspace exists in the subscription
+        in the same resource group, with the same name it is returned, otherwise, a new one is created.
 
-        Could also persist workspace:
-        ws.write_config(path="./file-path", file_name="ws_config.json")
+        PARAMS: 
+            authentication   : azureml.core.authentication   : User Authentication with rights to sub 
+            subscription_id  : String                        : Azure Subscription ID
+            resource_group   : String                        : Azure Resource Group Name
+            workspace_name   : String                        : AMLS workspace name
+            workspace_region : String                        : Azure Region
 
-        Load saved one:
-        ws = Workspace.from_config()
 
-        Get Details:
-        ws.get_details()
+        RETURNS: 
+            azureml.core.Workspace
     '''
     return_workspace = None
     useExistingWorkspace = False
     workspaces = None
     
     '''
-        If resource group doesn't exist, this wil throw a ProjectSystemException  
+        If resource group doesn't exist, this will throw a ProjectSystemException  
     '''
     try:
         workspaces = Workspace.list(subscription_id, authentication, resource_group )
@@ -92,9 +119,15 @@ def getWorkspace(authentication, subscription_id, resource_group, workspace_name
 
 def getExperiment(workspace, experiment_name):
     '''
-        Gets an AMLS experiment. Searches through existing experiments first
-        to see if it already exists. If not, create a new one, otherwise
-        return the existing one. 
+        Gets an AMLS experiment. Searches through the provided workspace experiments first
+        to see if it already exists. If not, create a new one, otherwise return the existing one. 
+
+        PARAMS: 
+            workspace        : azureml.core.Workspace   : Existing AMLS Workspace
+            experiment_name  : String                   : Name of experiment to retrieve/create
+
+        RETURNS: 
+            azureml.core.Experiment
     '''
     found = False
     return_experiment = None
@@ -112,6 +145,26 @@ def getExperiment(workspace, experiment_name):
     return return_experiment
 
 def registerModel(workspace, experiment, model_name, model_file):
+    '''
+        Search an existing AMLS workspace for models. If one is found, return it, 
+        otherwise create a new model. 
+
+        If the parameter model_file points to a file on disk (check existence), then that
+        is used to register a new model. If not, a new dummy pkl file will be generated. 
+
+        PARAMS: 
+            workspace        : azureml.core.Workspace   : Existing AMLS Workspace
+            experiment_name  : azureml.core.Experiment  : Existing AMLS Experiment
+            model_name       : String                   : The name of the model to register
+            model_file       : String                   : This is one of two values
+                                                            1. Name of a pkl file to create (dummy for RTS)
+                                                            2. Full path to pkl model file that is in the same 
+                                                               directory as the running script. 
+
+
+        RETURNS: 
+            azureml.core.Model
+    '''
 
     return_model = None
 
@@ -134,19 +187,43 @@ def registerModel(workspace, experiment, model_name, model_file):
         run = experiment.start_logging()
         run.log("Just simply dumping somethign in", True)
 
-        createPickle(model_file)
+        # If the file does not exist, create a dummy model file. 
+        if os.path.exists(model_file) == False:
+            createPickle(model_file)
 
         run.upload_file(name = 'outputs/' + model_file, path_or_stream = './'+ model_file)
 
         # Complete tracking and get link to details
         details = run.complete()
-        print(details)
 
         return_model = run.register_model(model_name = model_name, model_path = "outputs/" + model_file)
 
     return return_model
 
 def createImage(workspace, scoring_file, model, image_name ):
+    '''
+        TODO: We should probably allow the conda_pack/requirements to be identified so we can switch
+              between CPU/GPU
+
+        NOTE: This function doesn't check for the existence of an image because new builds 
+              will just create a new version on a container. If the caller doesn't want duplicates, 
+              they need to ensure that one does not exist already.
+
+
+        Creates a new Docker Container image and uploads it to the associated ACR 
+        with the workspace. 
+
+        PARAMS: 
+            workspace        : azureml.core.Workspace   : Existing AMLS Workspace
+            scoring_file     : String                   : Name/path of local .py file that has an init() and run() function defined.
+            model            : azureml.core.Model       : Registered AMLS model
+            image_name       : String                   : Name of the container to be created.
+
+
+        RETURNS: 
+            azureml.core.image.ContainerImage
+    '''
+    
     conda_pack = []
     requirements = ["azureml-defaults==1.0.57", "azureml-contrib-services"]
 
@@ -179,6 +256,18 @@ def createImage(workspace, scoring_file, model, image_name ):
     return image
 
 def _getExistingCompute(workspace, compute_name):
+    '''
+        Tries to load an existing AMLS compute target by name searching
+        a specified AMLS workspace
+
+        PARAMS: 
+            workspace        : azureml.core.Workspace   : Existing AMLS Workspace
+            compute_name     : String                   : Name of the AMLS compute to locate.
+
+
+        RETURNS: 
+            azureml.core.compute.ComputeTarget or None if not found
+    '''
     existing_compute = None
 
     targets = ComputeTarget.list(workspace)
@@ -196,18 +285,76 @@ def _getClusterPurpose(dev_test):
         For an explaination on this field, see:
 
         https://docs.microsoft.com/en-us/python/api/azureml-core/azureml.core.compute.aks.akscompute.clusterpurpose?view=azure-ml-py
+
+        PARAMS: 
+            dev_test        : bool   : Flag indicating if this is a development cluster.
+
+
+        RETURNS: 
+            String AksCompute.ClusterPurpose depending on purpose. 
     '''
     purpose = AksCompute.ClusterPurpose.FAST_PROD
     if dev_test:
         purpose = AksCompute.ClusterPurpose.DEV_TEST
     return purpose
 
+def createBatchComputeCluster(workspace, compute_name, compute_sku, max_node_count, min_node_count):
+    '''
+        Create new AKS cluster, unless there is an existing AMLS compute with the same 
+        name already attached to the AMLS workspace. 
+
+        PARAMS: 
+            workspace        : azureml.core.Workspace   : Existing AMLS Workspace
+            compute_name     : String                   : Name of the AMLS compute to create/locate.
+            compute_sku      : String                   : Azure ML VM Sku
+            max_node_count   : int                      : Max number of VM's to add to the cluster
+            min_node_count   : int                      : Min number of VM's to add to the cluster
+
+        RETURNS: 
+            azureml.core.compute.ComputeTarget
+
+    '''
+    batch_target = _getExistingCompute(workspace, compute_name)
+    
+    if batch_target == None:
+        print("Creating new Batch compute.....")
+        prov_config = AmlCompute.provisioning_configuration(
+            vm_size = compute_sku, 
+            min_nodes = min_node_count,
+            max_nodes = max_node_count
+            )
+ 
+        batch_target = ComputeTarget.create(
+            workspace = workspace, 
+            name = compute_name, 
+            provisioning_configuration = prov_config
+        )
+
+        batch_target.wait_for_completion(show_output = True)
+
+        batch_status = batch_target.get_status()
+        print(batch_status)
+
+    return batch_target
 
 def createComputeCluster(workspace, region, compute_name, compute_sku, node_count, dev_cluster):
     '''
-        Create new AKS cluster, except if one exists with the same name. 
+        Create new AKS cluster, unless there is an existing AMLS compute with the same 
+        name already attached to the AMLS workspace. 
 
-        Check for existence with _getExistingCompute()
+        PARAMS: 
+            workspace        : azureml.core.Workspace   : Existing AMLS Workspace
+            region           : String                   : Azure region
+            compute_name     : String                   : Name of the AMLS compute to create/locate.
+            compute_sku      : String                   : Azure ML VM Sku
+            node_count       : int                      : Number of VM's to add to the cluster
+            dev_cluster      : bool                     : Flag indicating if this is a development cluster. A development
+                                                          cluster generally has fewwer vCPU's based on node count than allowed
+                                                          for a production deployment. 
+
+        RETURNS: 
+            azureml.core.compute.AksCompute
+
     '''
     purpose = _getClusterPurpose(dev_cluster)
     aks_target = _getExistingCompute(workspace, compute_name)
@@ -236,10 +383,22 @@ def createComputeCluster(workspace, region, compute_name, compute_sku, node_coun
 
 def attachExistingCluster(workspace, cluster_name, resource_group, compute_name, dev_cluster):
     '''
-        Add an existing AKS, probably what we need for CMK clusters.
+        Attach an existing AKS cluster, unless there is an existing AMLS compute with the same 
+        name already attached to the AMLS workspace. 
 
-        If a compute already exists with the name compute_name in the workspace
-        just use it. Otherwise attach it.
+
+        PARAMS: 
+            workspace        : azureml.core.Workspace   : Existing AMLS Workspace
+            cluster_name     : String                   : Name of an existing AKS cluster 
+            resource_group   : String                   : Name of the Azure Resource group existing cluster is in
+            compute_name     : String                   : Name of the AMLS compute to create/locate.
+            dev_cluster      : bool                     : Flag indicating if this is a development cluster. A development
+                                                          cluster generally has fewwer vCPU's based on node count than allowed
+                                                          for a production deployment. 
+
+        RETURNS: 
+            azureml.core.compute.AksCompute
+
     '''
     print("Attaching existing AKS compute.....")
 
@@ -260,7 +419,24 @@ def attachExistingCluster(workspace, cluster_name, resource_group, compute_name,
 
 def createWebservice(workspace, container_image, service_name, replica_count, cores_count, compute_target):
     '''
-        Create AKS cluster
+        TODO: Should allow for the overwrite flag. 
+
+        Attach a azureml.core.webservice.Webservice for a given container on an AKS cluster. 
+
+        If a WebService already exists (by name) on the given workspace, return it instead. 
+
+
+        PARAMS: 
+            workspace        : azureml.core.Workspace               : Existing AMLS Workspace
+            container_image  : azureml.core.image.ContainerImage    : Name of an existing AKS cluster 
+            service_name     : String                               : Name of the webservice (deployment) in the AMLS workpsace.
+            replica_count    : int                                  : Number of requested instances of container on cluster.
+            cores_count      : int                                  : Number of cores to allocate to each container
+            compute_target   : azureml.core.compute.AksCompute      : AKS cluster to create the service on
+
+        RETURNS: 
+            azureml.core.webservice.Webservice
+
     '''
     web_service = None
 

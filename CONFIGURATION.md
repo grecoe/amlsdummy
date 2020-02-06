@@ -1,13 +1,13 @@
 # Configuration
 There are essentially three ways you can seed the required information to deploy this solution. 
 
-1. Modify the parameters in scripts/general_utils.py in the loadArguments() function. 
+1. Modify the parameters in scripts/argument_utils.py in the _loadRtsArguments() function. 
     - These parameters are explicitly set to required=False. This means that you are not required to provide parameters on the command line if you do not wish to. 
 2. Provide the neccesary parameters to the command line with expected types. 
-3. Provide a configuration file in JSON format to the program and have the items parsed from there. An example configuration file is provided and is called configuration.json. 
+3. Provide a configuration file in JSON format to the program and have the items parsed from there. An example configuration file is provided and is called rtsconfiguration.json. 
     - To provide configuraiton file the only two arguments to the script are:
-        - run.py -config [filename]
-    - <b>NOTE</b>: The default configuraiton.json provided will NOT parse correctly because of the bool and int types that are expected.
+        - rtscreate.py -config [filename]
+    - <b>NOTE</b>: The default rtsconfiguraiton.json provided will NOT parse correctly because of the bool and int types that are expected.
 
 ## Subscription Level Settings
 These settings are subscription level settings required to deploy the project.
