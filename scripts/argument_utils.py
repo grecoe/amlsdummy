@@ -108,7 +108,7 @@ def _loadBatchArguments(sys_args):
     parser.add_argument("-batch_vm_min", required=False, default=2, type=int, help="Min Azure VM count") 
     parser.add_argument("-batch_vm_max", required=False, default=2, type=int, help="Max Azure VM count") 
 
-
+    # TBD -> This should probably be an existing account......
     parser.add_argument("-source_blob_account", required=False, default="FINDREAL", type=str, help="AMLS Compute Name") 
     parser.add_argument("-source_blob_key", required=False, default="FINDREAL", type=str, help="AMLS Compute Name") 
 

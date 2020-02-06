@@ -333,7 +333,7 @@ def createBatchComputeCluster(workspace, compute_name, compute_sku, max_node_cou
         batch_target.wait_for_completion(show_output = True)
 
         batch_status = batch_target.get_status()
-        print(batch_status)
+        assert len(batch_status.errors) == 0
 
     return batch_target
 

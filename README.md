@@ -26,17 +26,23 @@ You will need
 ## Repository Content
 |Item|Type|Description|
 |----|----|-----------|
+|contexts|Directory|Contains implementations of Real Time Scoring and Batch Scoring models.|
 |scripts|Directory|Contains utility scripts for loading configuration and making the actual Azure SDK calls.|
-|CONFIGURATION.md|File|Describes the different ways to provide configuration settings to the main script (rtscreate.py)|
-|rtsconfiguration.json|File|Example configuration file as described in CONFIGURATION.md.|
 |environment.yml|File|Environment file to feed to conda to create the development environment to run this project.|
+|Real Time Scoring||
+|RTSCONFIGURATION.md|File|Describes the different ways to provide configuration settings to the main script real time scoring (rtscreate.py)|
+|rtsconfiguration.json|File|Example configuration file as described in CONFIGURATION.md.|
 |rtscreate.py|File|The main script that will perform all of the creation steps of the Azure Machine Learning workspace from resource group creation through to the deployment of an Azure Machine Learning Real Time Scoring service.|
 |scoring.py|File|This file is used when creating the Azure Machine Learning Real Time Scoring service and does not need altering in any way.|
 |rtsloadtest.py|file|Secondary script to test your public Azure Machine Learning Real Time Scoring service in a load test type of way.|
+|Batch Scoring||
+|BTCHCONFIGURATION.md|File|Describes the different ways to provide configuration settings to the main batch scoring script (btchcreate.py)|
+|btchconfiguration.json|File|Example configuration file as described in BTCHCONFIGURATION.md.|
+|btchcreate.py|File|The main script that will perform all of the creation steps of the Azure Machine Learning workspace from resource group creation through to the deployment of an Azure Machine Learning Real batch scoring pipeline.|
 
 ## Development Notes
 
-### Linux only
+### Linux only - Real Time Scoring Only
 To test the container image you have to perform the following commands from the bash shell.
 
 ```
@@ -46,7 +52,7 @@ newgrp docker
 
 <b>NOTE</b>: Re-running the code over and over will not produce anything outside of the original scope. At each step before the model, container image, aks service, or REST endpoint is created, the Azure Machine Learning workspace is scanned for the item. If it exists, no new service is created. 
 
-### Deployed API Input/Return
+### Real Time Scoring - Deployed API Input/Return
 This example produces a REST API with the expected input:
 
 |||
@@ -72,7 +78,7 @@ Where [name] is the input value.
 
 Service code that generates the response is in scoring.py.
 
-# Scripts
+# Real Time Scoring Scripts
 
 ## Script: rtscreate.py
 This is the main Python script to create everythign from the resource group -> REST endpoint. 
@@ -127,3 +133,8 @@ The script is actually fairly flexible and with minor changes for payload, you c
 |k|Web service API Key|
 |t|Number of threads to spawn.|
 |i|Number of calls (iterations) that each thread should make before returning.|
+
+# Batch Scoring Scripts
+
+## Script: btchcreate.py
+TBD

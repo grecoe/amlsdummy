@@ -1,4 +1,4 @@
-# Configuration
+# Configuration - Real Time Scoring
 There are essentially three ways you can seed the required information to deploy this solution. 
 
 1. Modify the parameters in scripts/argument_utils.py in the _loadRtsArguments() function. 
