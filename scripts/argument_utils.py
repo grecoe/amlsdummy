@@ -98,7 +98,6 @@ def _loadBatchArguments(sys_args):
             - Model name (that will be registered)
     '''
     parser.add_argument("-experiment", required=False, default="simple_experiment", type=str, help="Experiment name") 
-    parser.add_argument("-model_name", required=False, default="dummy", type=str, help="Registered model name") 
 
     '''
         AMLS Compute Information
@@ -113,8 +112,8 @@ def _loadBatchArguments(sys_args):
 
         Use the workspace storage account for the source and results files for the pipeline
     '''
-    parser.add_argument("-source_container", required=False, default="batchsource", type=str, help="Storage container with data") 
-    parser.add_argument("-result_container", required=False, default="batchresult", type=str, help="Storage container recieving results") 
+    parser.add_argument("-source_container", required=False, default="source", type=str, help="Storage container with data") 
+    parser.add_argument("-result_container", required=False, default="result", type=str, help="Storage container recieving results") 
 
     # Local data files
     parser.add_argument("-data_folder", required=False, default="./batch", type=str, help="Local data directory.") 
@@ -125,7 +124,7 @@ def _loadBatchArguments(sys_args):
         Pipeline settings
     '''
     
-    parser.add_argument("-pipeline_name", required=False, default="simple_pipeline2", type=str, help="AML Pipeline name") 
+    parser.add_argument("-pipeline_name", required=False, default="simple_pipeline6", type=str, help="AML Pipeline name") 
     parser.add_argument("-schedule_frequency", required=False, default="Hour", type=str, help="Pipeline frequency") 
     parser.add_argument("-schedule_interval", required=False, default=1, type=int, help="Pipeline interval") 
 

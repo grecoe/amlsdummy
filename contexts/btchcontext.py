@@ -144,7 +144,10 @@ class BatchScoringContext(BaseContext):
         run_config.environment.docker.enabled = True
 
         '''
-            Next we need to let the pipeline know which store the output is going. 
+            Next we need to let the pipeline know which store the output is going.
+
+            The name here is going to be the directory we will output results to and the data store
+            is where we want to put stuff.
         '''
         prediction_ref = PipelineData(name="preds", datastore=self.outputDataStore, is_directory=True)
         '''

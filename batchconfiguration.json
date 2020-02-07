@@ -3,6 +3,7 @@
     "resourceGroup" : "String -[Azure Resource Group Name - New or Existing]",
     "region" : "String -[Azure Region to Deploy, example: eastus]",
     "workspace" : "String -[Name of Azure Machine Learning workspace to create or attach to]",
+    "experiment" : "String - [Name of the Azure Machine Learning experiment]",
     "batch_compute_name" : "String -[Azure Machine Learning Compute Name]",
     "batch_vm_size" : "String = [SKU name of the machines to create in a NEW cluster]",
     "batch_vm_min" : "int = [Minimum Number of running VMs in a NEW cluster]",
