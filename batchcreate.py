@@ -26,7 +26,28 @@ program_context = BatchScoringContext(programargs, userAuth)
 '''
 program_context.generateWorkspace()
 
+
+'''
+    Deal with storage details
+'''
+program_context.generateStorageContainers()
+
+'''
+    Upload data files
+'''
+program_context.uploadDataFiles()
+
 '''
     Get or create batch compute
 '''
 program_context.generateCompute()
+
+'''
+    Create the datasets for the pipeline
+'''
+program_context.createPipelineDataReferences()
+
+'''
+    Create the pipeline
+'''
+program_context.createPipeline()

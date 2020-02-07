@@ -13,13 +13,10 @@ You will need
     - If running on Windows you will not be able to test the docker container locally as the image is Linux based. However, you'll still be able to create and deploy a service.
 
 #### Prerequisites
-1. Clone this repo to your machine
-2. Create the conda environment
-    - conda env create -f environment.yml
-    - conda activate SimpleModel
-3. Modify whatever settings you need. There are several ways to supply configuration for the main script, details are in the rtsconfiguraiton.md file. . 
-4. Run the main script for your path - rtscreate.py with your chosen configuraiton to create the solution..
-5. When done, delete the resource group you identified in your choice of settings.
+1. Ensure you have activated the conda environment SimpleModel. 
+2. Modify whatever settings you need. There are several ways to supply configuration for the main script, details are in the rtsconfiguraiton.md file. . 
+3. Run the main script for your path - rtscreate.py with your chosen configuraiton to create the solution..
+4. When done, delete the resource group you identified in your choice of settings.
 
 ## Real Time Scoring Repository Content
 |Item|Type|Description|

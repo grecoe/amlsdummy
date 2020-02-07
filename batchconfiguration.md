@@ -9,8 +9,8 @@ There are essentially three ways you can seed the required information to deploy
 2. Provide the neccesary parameters to the command line with expected types. 
 3. Provide a configuration file in JSON format to the program and have the items parsed from there. An example configuration file is provided and is called rtsconfiguration.json. 
     - To provide configuraiton file the only two arguments to the script are:
-        - btchcreate.py -config [filename]
-    - <b>NOTE</b>: The default btchconfiguraiton.json provided will NOT parse correctly because of the bool and int types that are expected.
+        - batchcreate.py -config [filename]
+    - <b>NOTE</b>: The default batchconfiguraiton.json provided will NOT parse correctly because of the bool and int types that are expected.
 
 ## Subscription Level Settings
 These settings are subscription level settings required to deploy the project.
@@ -30,13 +30,30 @@ These settings are subscription level settings required to deploy the project.
 
 ## Batch Compute Cluster Settings
 
-### Common
 |Property|Required|Type|Description|
 |--------|--------|-----|-----------|
 |batch_compute_name|YES|String|The name given in Azure Machine Learning workspace to the compute being used. This is NOT the name of the actual AKS cluster that will be created/attached to.|
 |batch_vm_size|No|String|The SKU name for the Azure Virtual Machine type to be created for a NEW Batch cluster only.<br><br>Example: Standard_D2|
 |batch_vm_max|No|Int|The maximum number of Azure Virtual Machines to add to the cluster when creating the cluster. This value is only useful for NEW AML Compute clusters.|
-|batch_vm_max|No|Int|The minimum number of Azure Virtual Machines to leave running.  This value is only useful for NEW AML Compute clusters.|
+|batch_vm_min|No|Int|The minimum number of Azure Virtual Machines to leave running.  This value is only useful for NEW AML Compute clusters.|
 
-    
-# REMAINDER TBD
+## Pipeline Settings
+
+### General
+|Property|Required|Type|Description|
+|--------|--------|-----|-----------|
+|pipeline_name|Yes|AMLS Pipeline name.|
+|batch_script_folder|Yes|Local folder holding batch script|
+|batch_script|Yes|Pyhon file to run on batch cluster.|
+|source_container|Yes| Azure Storage container for source data files.|
+|result_container|Yes|Azure Storage container for results data file.|
+|data_folder|Yes|String|Local directory holding data files.|
+|data_files|Yes|String|Comma separated list of files to upload to source_container that exist in data_folder|
+|result_file|Yes|String|File name for output of batch result.|
+
+### Schedule
+|Property|Required|Type|Description|
+|--------|--------|-----|-----------|
+|schedule_frequency|Yes|String|Frequency that the scheduled pipeline runs.|
+|schedule_interval|Yes|Int|The interval of schedule_frequency to run the scheduled pipeline.|
+

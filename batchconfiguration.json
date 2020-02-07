@@ -1,0 +1,20 @@
+{
+    "subid" : "String - [Your Azure Subscription ID]",
+    "resourceGroup" : "String -[Azure Resource Group Name - New or Existing]",
+    "region" : "String -[Azure Region to Deploy, example: eastus]",
+    "workspace" : "String -[Name of Azure Machine Learning workspace to create or attach to]",
+    "batch_compute_name" : "String -[Azure Machine Learning Compute Name]",
+    "batch_vm_size" : "String = [SKU name of the machines to create in a NEW cluster]",
+    "batch_vm_min" : "int = [Minimum Number of running VMs in a NEW cluster]",
+    "batch_vm_max" : "int = [Maximum Number of VMs to add in a NEW cluster]",
+    "source_container" :"String = [Azure Storage container for source data file.]",
+    "result_container" : "String = [Azure Storage container for results data file.]",
+    "data_folder" : "String = [Folder name holding data files.]",
+    "data_files" : "String = [Comma separated list of files to upload to source_container stored in data_folder]",
+    "result_file" : "String = [File name for results file from batch job]",
+    "schedule_frequency" : "String = [Schedule pipeline frequency, i.e. Hourly, etc]",
+    "schedule_interval" : "int = [Schedule pipeline interval of frequency]",
+    "pipeline_name" : "String = [AMLS Pipeline name]", 
+    "batch_script_folder" : "String = [Local folder holding batch script]", 
+    "batch_script" : "String = [Pyhon file to run on batch cluster.]"
+}

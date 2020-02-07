@@ -1,18 +1,28 @@
 import requests
 import json
 import os
+
 from azureml.core import Workspace
 from azureml.core import Experiment
 from azureml.core import Model
-from azureml.core.image import ContainerImage
-from azureml.core.compute import AksCompute, AmlCompute, ComputeTarget
-from azureml.core.webservice import Webservice, AksWebservice
-from azureml.core.conda_dependencies import CondaDependencies
 from azureml.core.authentication import ServicePrincipalAuthentication
 from azureml.core.authentication import AzureCliAuthentication
 from azureml.core.authentication import InteractiveLoginAuthentication
 from azureml.core.authentication import AuthenticationException
+from azureml.core.compute import AksCompute, AmlCompute, ComputeTarget
+from azureml.core.conda_dependencies import CondaDependencies
+from azureml.core.datastore import Datastore
+from azureml.core.image import ContainerImage
+from azureml.core.webservice import Webservice, AksWebservice
+from azureml.data.data_reference import DataReference
+from azureml.pipeline.core import Pipeline, PipelineData, PublishedPipeline
+from azureml.pipeline.core.schedule import ScheduleRecurrence, Schedule
+
+from azure.core.exceptions import ResourceExistsError
+from azure.storage.blob import BlobServiceClient
+from azure.storage.blob import BlobClient
 from scripts.general_utils import createPickle
+
 
 def get_auth():
     '''
@@ -463,3 +473,117 @@ def createWebservice(workspace, container_image, service_name, replica_count, co
         web_service.wait_for_deployment(show_output=True)
 
     return web_service
+
+# Batch Specific calls
+def createStorageContainer(storage_name, storage_key, container_names):
+    '''
+        Create storage containers in the provided storage account. If the containers 
+        exist, they will not be altered.
+
+        PARAMS: 
+            storage_name     : string       : Name of the Azure Storage Account
+            storage_key      : string       : Access Key to the Azure Storage Account
+            container_names  : list[string] : List of container names to create.
+
+        RETURNS: 
+            Nothing
+
+    '''
+    
+    blob_service = BlobServiceClient(account_url="https://"+storage_name+".blob.core.windows.net/", credential=storage_key)
+
+    for container in container_names:
+        try:
+            blob_service.create_container(container)
+            print("Storage container created - ", storage_name, " : ", container)
+        except ResourceExistsError: 
+            print("Storage container already exists - ", storage_name, " : ", container)
+
+def uploadStorageBlobs(storage_name, storage_key, container_name, local_folder, file_list):
+    '''
+        Upload files to an azure blob container.
+
+        PARAMS: 
+            storage_name     : string       : Name of the Azure Storage Account
+            storage_key      : string       : Access Key to the Azure Storage Account
+            container_name   : string       : Container name to recieve blobs. Must exist
+            local_folder     : string       : Local folder containing files to upload.
+            file_list  : list[string] : List of files from local folder to upload
+
+        RETURNS: 
+            Nothing
+
+    '''
+    
+    blob_service = BlobServiceClient(account_url="https://"+storage_name+".blob.core.windows.net/", credential=storage_key)
+    blob_container = blob_service.get_container_client(container_name)
+    for local_file in file_list:
+        path = os.path.join(local_folder, local_file)
+        with open(path, "rb") as data:    
+            try:
+                blob_container.upload_blob(local_file, data)
+                print("File Uploaded : ", container_name,'-',local_file)
+            except ResourceExistsError: 
+                print("File Exists : ", container_name,'-',local_file)
+
+def createDataReference(workspace, storage_name, storage_key, storage_container_name, data_store_name, data_reference_name):
+    '''
+        If no present, registers a new azureml.core.datastore.Datastore
+        Once the data store is in hand it creates an instance of azureml.data.data_reference.DataReference that 
+        can be used in an Azure ML pipeline step. 
+
+        PARAMS: 
+            workspace               : azureml.core.Workspace    : Existing AMLS Workspace
+            storage_name            : string                    : Name of the Azure Storage Account
+            storage_key             : string                    : Access Key to the Azure Storage Account
+            storage_container_name  : string                    : Container name to recieve blobs. Must exist
+            data_store_name         : string                    : Name of the registere data store.
+            data_reference_name     : string                    : Name of the data reference
+
+        RETURNS: 
+            tuple(azureml.core.datastore.Datastore, azureml.data.data_reference.DataReference)
+
+    '''
+    data_store = None
+
+    try:
+        data_store = Datastore.get(workspace, data_store_name)
+        print("Found existing data store - ", data_store_name)
+    except Exception as ex:
+        print("Creating data store - ", data_store_name)
+        
+        data_store = Datastore.register_azure_blob_container(
+                    workspace,
+                    datastore_name=data_store_name,
+                    container_name=storage_container_name,
+                    account_name=storage_name,
+                    account_key=storage_key,
+                )
+
+    if data_store == None:
+        raise Exception("Could not create/find data store.")
+
+    return  data_store, DataReference(datastore = data_store, data_reference_name = data_reference_name)
+
+def getExistingPipeline(workspace, pipeline_name):
+    '''
+        Look for an return an exising azureml.pipeline.core.PublishedPipeline instance based on name 
+
+        PARAMS: 
+            workspace               : azureml.core.Workspace    : Existing AMLS Workspace
+            pipeline_name           : string                    : Name of the published pipeline to find.
+
+        RETURNS: 
+            azureml.pipeline.core.PublishedPipeline if found, None otherwise
+
+    '''
+    return_pipeline = None
+
+    pipelines = PublishedPipeline.list(workspace)
+    if len(pipelines) > 0:
+        for pipe in pipelines:
+            if pipe.name == pipeline_name:
+                return_pipeline = pipe 
+                break
+
+    return return_pipeline

@@ -6,10 +6,14 @@ The code in this repository can create Azure Machine Learning services. There ar
 2. Batch Scoring service
 
 
-Code for both project types can be run on Windows or Linux. 
+# Common Configuration
+Either path you choose you need to set up a conda environment to execute the scripts in as required Azure and Azure Machine Learning modules need to be present. 
 
-### Azure Machine Learning - Real Time Scoring
-Navigate to rtsreadme.md for instructions to proceed.
+1. Clone this repo to your machine
+2. Create the conda environment
+    - conda env create -f environment.yml
+    - conda activate SimpleModel
+3. Choose the path you want to follow:
+    - Real Time Scoring - Navigate to  rtsreadme.md 
+    - Batch Scoring - Navigate to batchreadme.md
 
-### Azure Machine Learning - Batch Scoring
-Navigate to btchreadme.md for instructions to proceed.
