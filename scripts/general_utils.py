@@ -4,7 +4,7 @@ from enum import Enum
 from datetime import datetime, timedelta
 
 class JobType(Enum):
-    real_time_scoring = "ReaTimeScoring"
+    real_time_scoring = "RealTimeScoring"
     batch_scoring = "BatchScoring"
 
 class JobLog:

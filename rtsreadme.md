@@ -18,6 +18,19 @@ You will need
 3. Run the main script for your path - rtscreate.py with your chosen configuraiton to create the solution..
 4. When done, delete the resource group you identified in your choice of settings.
 
+## Azure Service Creation
+During the creation of this solution the following Azure Services are created in your subscription:
+
+|Service|Purpose|
+|-------|--------|
+|Azure Resource Group| The Azure Resource group is a container that will hold other Azure resources.<br><br>For this project there will actually be two resource groups created. The first for the Azure Machine Learning required services, and the second for the Azure Kubernetes Service cluster nodes.|
+|Azure Machine Learning|This is the main machine learning service and orchestrates communication and data movement amongst other Azure services. |
+|Azure Container Registry| The project creates Docker containers which are then stored in the ACR|
+|Azure Key Vault|The key vault is used to store secrets for the solution such as passwords to the ACR and connection strings to the storae account.|
+|Azure Storage Account|This storage is used extensively with the AMLS service storing code snapshots, other outputs and logs.|
+|Application Insights|Application insights is used to capture metrics and other data related to a published model/endpoint.|
+|Azure Kubernetes Service|This project utilizes AKS to deploy Docker containers to to service calls. This service is further backed by another resource group in the subscription which holds the actual Azure Virtual Machines that are the Kubenetes cluster nodes.|
+
 ## Real Time Scoring Repository Content
 |Item|Type|Description|
 |----|----|-----------|
@@ -74,7 +87,7 @@ This is the main Python script to create everythign from the resource group -> R
 
 It uses configuration parameters (as noted above) as to where to create the Azure services as well as any other configuration settings that can be used. 
 
-Configuration parameters can be provided in several ways, read CONFIGURATION.md to determine the best way to provide parameters for your needs. 
+Configuration parameters can be provided in several ways, read rtsconfiguration.md to determine the best way to provide parameters for your needs. 
 
 Further, it utilizes the scoring.py file as the script that sits behind the REST endpoint. 
 
