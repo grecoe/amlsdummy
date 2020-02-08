@@ -1,4 +1,70 @@
 import pickle
+import os
+from enum import Enum
+from datetime import datetime, timedelta
+
+class JobType(Enum):
+    real_time_scoring = "ReaTimeScoring"
+    batch_scoring = "BatchScoring"
+
+class JobLog:
+    step_start = "start"
+    step_end = "end"
+
+    def __init__(self, jobtype):
+        self.job_type = jobtype
+        self.job_directory = jobtype.value + "Logs"
+        self.job_steps = {}
+        self.job_info = []
+        self.total_start = None
+
+    def startStep(self, step_name):
+        if len(self.job_steps) == 0:
+            self.total_start = datetime.now()
+
+        self.job_steps[step_name] = {}
+        self.job_steps[step_name][JobLog.step_start] = datetime.now()
+
+    def endStep(self, step_name):
+        if step_name in self.job_steps.keys():
+            self.job_steps[step_name][JobLog.step_end] = datetime.now()
+    
+    def addInfo(self, info):
+        self.job_info.append(info)
+
+    def dumpLog(self):
+
+        total_run_time = datetime.now() - self.total_start
+
+        log_path = os.path.join("Logs", self.job_directory)
+        if os.path.exists(log_path) == False:
+            os.makedirs(log_path)
+        
+        file_name = datetime.now().isoformat()
+        file_name = file_name.replace(":","-")
+        file_name = file_name.replace(".","-")
+        file_name += ".log"
+
+        file_path = os.path.join(log_path, file_name)
+
+        with open(file_path, "w") as log_output:
+            log_output.writelines("Job Type: {}\n".format(self.job_type.value))
+            log_output.writelines("Total Run Time: {} seconds\n".format(total_run_time.total_seconds()))
+            log_output.writelines("Job Info: \n")
+            for info in self.job_info:
+                log_output.writelines("    " + info + "\n")
+
+            log_output.writelines("Job Steps: \n")
+            for step in self.job_steps.keys():
+                if JobLog.step_start in self.job_steps[step].keys() and JobLog.step_end in self.job_steps[step].keys():
+                    time_delt = self.job_steps[step][JobLog.step_end] - self.job_steps[step][JobLog.step_start]
+                    log_output.writelines("    {} - {} seconds \n".format(step, time_delt.total_seconds()))
+                else:
+                    log_output.writelines("    {} - {} \n".format(step, self.job_steps[step]))
+
+
+        
+
 
 
 def createPickle(file_name):

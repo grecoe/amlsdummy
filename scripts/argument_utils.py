@@ -85,7 +85,7 @@ def _loadBatchArguments(sys_args):
         Subscription information : Subscription ID, Resource Group, Region
     '''
     parser.add_argument("-subid", required=False, default='0ca618d2-22a8-413a-96d0-0f1b531129c3', type=str, help="Subscription ID") 
-    parser.add_argument("-resourceGroup", required=False, default="dangtestbedbatch", type=str, help="Resource Group") 
+    parser.add_argument("-resourceGroup", required=False, default="dangtestbedbatch2", type=str, help="Resource Group") 
     parser.add_argument("-region", required=False, default="eastus", type=str, help="Azure Region") 
 
     '''
@@ -124,7 +124,7 @@ def _loadBatchArguments(sys_args):
         Pipeline settings
     '''
     
-    parser.add_argument("-pipeline_name", required=False, default="simple_pipeline6", type=str, help="AML Pipeline name") 
+    parser.add_argument("-pipeline_name", required=False, default="simple_pipeline", type=str, help="AML Pipeline name") 
     parser.add_argument("-schedule_frequency", required=False, default="Hour", type=str, help="Pipeline frequency") 
     parser.add_argument("-schedule_interval", required=False, default=1, type=int, help="Pipeline interval") 
 
@@ -171,7 +171,7 @@ def _loadRtsArguments(sys_args):
         Subscription information : Subscription ID, Resource Group, Region
     '''
     parser.add_argument("-subid", required=False, default='0ca618d2-22a8-413a-96d0-0f1b531129c3', type=str, help="Subscription ID") 
-    parser.add_argument("-resourceGroup", required=False, default="dangtestbed", type=str, help="Resource Group") 
+    parser.add_argument("-resourceGroup", required=False, default="dangtestbed2", type=str, help="Resource Group") 
     parser.add_argument("-region", required=False, default="eastus", type=str, help="Azure Region") 
     '''
         AMLS Workspace infomration: workspace name

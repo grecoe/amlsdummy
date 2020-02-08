@@ -108,7 +108,7 @@ def getWorkspace(authentication, subscription_id, resource_group, workspace_name
         Return existing or create new
     '''
     if useExistingWorkspace:
-        print("Loading existing workspace ....")
+        print("Loading existing workspace ....", workspace_name)
         return_workspace = Workspace.get(
             name = workspace_name,
             subscription_id = subscription_id,
@@ -116,7 +116,7 @@ def getWorkspace(authentication, subscription_id, resource_group, workspace_name
             )
     else:
         # Create one
-        print("Creating new workspace ....")
+        print("Creating new workspace ....", workspace_name)
         return_workspace = Workspace.create(
             name = workspace_name,
             subscription_id = subscription_id,
@@ -185,7 +185,7 @@ def registerModel(workspace, experiment, model_name, model_file):
     if models:
         for model in models:
             if model.name == model_name:
-                print("Returning existing model....")
+                print("Returning existing model....", model_name)
                 return_model = model
                 break
 
@@ -343,7 +343,7 @@ def createBatchComputeCluster(workspace, compute_name, compute_sku, max_node_cou
         batch_target.wait_for_completion(show_output = True)
 
         batch_status = batch_target.get_status()
-        assert len(batch_status.errors) == 0
+        print("Batch Compute Status : ", batch_status)
 
     return batch_target
 
@@ -454,12 +454,12 @@ def createWebservice(workspace, container_image, service_name, replica_count, co
     if len(services) > 0:
         for svc in services:
             if svc.name == service_name:
-                print("Returning existing deployed web service ....")
+                print("Returning existing deployed web service ....", service_name)
                 web_service = svc
                 break
 
     if web_service == None:
-        print("Creating new web service.....")
+        print("Creating new web service.....", service_name)
         aks_config = AksWebservice.deploy_configuration(num_replicas=replica_count, cpu_cores=cores_count)
 
         web_service = Webservice.deploy_from_image(
