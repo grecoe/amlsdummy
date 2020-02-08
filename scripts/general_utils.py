@@ -10,10 +10,12 @@ class JobType(Enum):
 class JobLog:
     step_start = "start"
     step_end = "end"
+    logs_directory = "Logs"
+    general_stats = "Overview.csv"
 
     def __init__(self, jobtype):
         self.job_type = jobtype
-        self.job_directory = jobtype.value + "Logs"
+        self.job_directory = jobtype.value + JobLog.logs_directory
         self.job_steps = {}
         self.job_info = []
         self.total_start = None
@@ -32,11 +34,25 @@ class JobLog:
     def addInfo(self, info):
         self.job_info.append(info)
 
+    def _dumpGeneral(self, log_path, total_time):
+
+        if os.path.exists(JobLog.logs_directory) == False:
+            os.makedirs(JobLog.logs_directory)
+
+        stats_file = os.path.join(JobLog.logs_directory, JobLog.general_stats)
+        log_entry = []
+        log_entry.append(self.job_type.value)
+        log_entry.append(log_path)
+        log_entry.append(str(total_time))
+
+        with open(stats_file, "a+") as general_stats:
+            general_stats.writelines("{}\n".format(",".join(log_entry)))
+
     def dumpLog(self):
 
         total_run_time = datetime.now() - self.total_start
 
-        log_path = os.path.join("Logs", self.job_directory)
+        log_path = os.path.join(JobLog.logs_directory, self.job_directory)
         if os.path.exists(log_path) == False:
             os.makedirs(log_path)
         
@@ -61,6 +77,8 @@ class JobLog:
                     log_output.writelines("    {} - {} seconds \n".format(step, time_delt.total_seconds()))
                 else:
                     log_output.writelines("    {} - {} \n".format(step, self.job_steps[step]))
+        
+        self._dumpGeneral(file_path, total_run_time.total_seconds())
 
 
         
