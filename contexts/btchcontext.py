@@ -8,6 +8,12 @@ from azureml.pipeline.core import Pipeline, PipelineData, PublishedPipeline
 from azureml.pipeline.core.schedule import ScheduleRecurrence, Schedule
 
 class BatchScoringContext(BaseContext):
+    # Data and script information
+    batch_data_directory = './paths/batch/scoring'
+    batch_data_file = 'data.txt'
+    batch_scoring_script = 'batch.py'
+    bach_scoring_results_file = "Results.txt"
+
     # Data store information
     input_store_name = "inputdata"
     input_reference_name = "inputdataref"
@@ -55,13 +61,13 @@ class BatchScoringContext(BaseContext):
             files that will be processed by the AML compute cluster.
         '''
         storage_details = self.workspace.get_default_datastore()
-        data_files = self.programArguments.data_files.split(",")
+        data_files = BatchScoringContext.batch_data_file.split(",")
 
         uploadStorageBlobs(
             storage_details.account_name,
             storage_details.account_key,
             self.programArguments.source_container,
-            self.programArguments.data_folder,
+            BatchScoringContext.batch_data_directory,
             data_files)
 
     def generateCompute(self):
@@ -162,9 +168,9 @@ class BatchScoringContext(BaseContext):
         '''
         self.pipelineStep = PythonScriptStep(
             name="basic_pipeline_step",
-            source_directory = self.programArguments.batch_script_folder,
-            script_name = self.programArguments.batch_script,
-            arguments = [ self.programArguments.data_files, self.inputDataReference, self.programArguments.result_file , prediction_ref],
+            source_directory = BatchScoringContext.batch_data_directory,
+            script_name = BatchScoringContext.batch_scoring_script,
+            arguments = [ BatchScoringContext.batch_data_file, self.inputDataReference, BatchScoringContext.bach_scoring_results_file , prediction_ref],
             inputs = [self.inputDataReference],
             outputs = [prediction_ref],
             compute_target = self.computeTarget,

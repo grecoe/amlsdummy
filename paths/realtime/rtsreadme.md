@@ -1,9 +1,13 @@
 # Real Time Scoring Example
 <sup> Daniel Grecoe - A Microsoft Employee</sup>
 
-This code creates an Azure Machine Learning Real Time Scoring service. The code in this repository can be run on Windows or Linux. The only restriction with Windows is that you cannot test the docker container image locally on the real time scoring path. 
+This code creates an Azure Machine Learning Real Time Scoring service in your Azure subscription. 
 
-The project creates a no-op Machine Learning WebService that simply returns a string message to the user. That is, the ML model backing it is a NO-OP. It was created simply to go through all of the motions of creating a model, registering it, creating a container, creating an AKS compute cluster, and finally, deploying it as a REST endpoint. 
+The code in this repository can be run on Windows or Linux. The only restriction with Windows is that you cannot test the docker container image locally on the real time scoring path. 
+
+The deployed scoring script does not utilize any actual Machine Learing/AI models but simply returns a JSON object with certain parts of the input to show that it did, in fact, run. 
+
+The purpose of this example is to exhibit the steps and services neccesary for deploying an Azure Machine Learning Real Time Scoring Service in your subscripiton only. No actual data science and model building are performed in this example.
 
 You will need
 - A devlopment environment with anaconda installed. 
@@ -32,16 +36,18 @@ During the creation of this solution the following Azure Services are created in
 |Azure Kubernetes Service|This project utilizes AKS to deploy Docker containers to to service calls. This service is further backed by another resource group in the subscription which holds the actual Azure Virtual Machines that are the Kubenetes cluster nodes.|
 
 ## Real Time Scoring Repository Content
+The main source files for this project are described in the master README.MD file in the respository. 
+
+Repository content described there is not duplicated here. 
+
+This table describes only what is in this directory.
+
 |Item|Type|Description|
 |----|----|-----------|
-|contexts|Directory|Contains implementations of Real Time Scoring and Batch Scoring models.|
-|scripts|Directory|Contains utility scripts for loading configuration and making the actual Azure SDK calls.|
-|environment.yml|File|Environment file to feed to conda to create the development environment to run this project.|
+|scoring|Directory|Contains a single file - scoring.py - that is the source code behind the REST endpoint. This code is executed on each call recieved.|
 |rtsconfiguration.md|File|Describes the different ways to provide configuration settings to the main script real time scoring (rtscreate.py)|
 |rtsconfiguration.json|File|Example configuration file as described in CONFIGURATION.md.|
-|rtscreate.py|File|The main script that will perform all of the creation steps of the Azure Machine Learning workspace from resource group creation through to the deployment of an Azure Machine Learning Real Time Scoring service.|
-|scoring.py|File|This file is used when creating the Azure Machine Learning Real Time Scoring service and does not need altering in any way.|
-|rtsloadtest.py|file|Secondary script to test your public Azure Machine Learning Real Time Scoring service in a load test type of way.|
+|rtsreadme.md|file|The file you are reading now.|
 
 
 ### Linux only 
@@ -81,6 +87,8 @@ Where [name] is the input value.
 Service code that generates the response is in scoring.py.
 
 # Real Time Scoring Scripts
+These scripts are found in at the head of the master repository, but details of how they perform the actions neccesary are described here.
+
 
 ## Script: rtscreate.py
 This is the main Python script to create everythign from the resource group -> REST endpoint. 

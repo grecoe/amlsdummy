@@ -1,3 +1,4 @@
+import shutil
 from scripts.azure_utils import *
 from contexts.basecontext import BaseContext
 
@@ -10,7 +11,8 @@ class RealTimeScoringContext(BaseContext):
         the program arguments parsed in general_utils.py
     '''
     model_file = "model.pkl"
-    scoring_script = "scoring.py"
+    scoring_script_name = "./scoring.py"
+    scoring_script = "./paths/realtime/scoring/scoring.py"
 
     '''
         Contains the context needed to perform the tasks. 
@@ -42,10 +44,14 @@ class RealTimeScoringContext(BaseContext):
             print(image.name, image.version)
             Logs here:
             image.image_build_log_uri
+
+            Move the scoring script to the execution directory (which is a requirement for creating an image)
+            When done, remove the copy.
         '''
+        shutil.copyfile(RealTimeScoringContext.scoring_script, RealTimeScoringContext.scoring_script_name)
         self.containerImage = createImage(
             self.workspace,
-            RealTimeScoringContext.scoring_script,
+            RealTimeScoringContext.scoring_script_name,
             self.model,
             self.programArguments.image_name)
 

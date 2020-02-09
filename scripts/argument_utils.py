@@ -85,7 +85,7 @@ def _loadBatchArguments(sys_args):
         Subscription information : Subscription ID, Resource Group, Region
     '''
     parser.add_argument("-subid", required=False, default='0ca618d2-22a8-413a-96d0-0f1b531129c3', type=str, help="Subscription ID") 
-    parser.add_argument("-resourceGroup", required=False, default="dangtestbedbatch2", type=str, help="Resource Group") 
+    parser.add_argument("-resourceGroup", required=False, default="dangtestbedbatch3", type=str, help="Resource Group") 
     parser.add_argument("-region", required=False, default="eastus", type=str, help="Azure Region") 
 
     '''
@@ -115,11 +115,6 @@ def _loadBatchArguments(sys_args):
     parser.add_argument("-source_container", required=False, default="source", type=str, help="Storage container with data") 
     parser.add_argument("-result_container", required=False, default="result", type=str, help="Storage container recieving results") 
 
-    # Local data files
-    parser.add_argument("-data_folder", required=False, default="./batch", type=str, help="Local data directory.") 
-    parser.add_argument("-data_files", required=False, default="data.txt", type=str, help="Single file") 
-
-
     '''
         Pipeline settings
     '''
@@ -128,11 +123,6 @@ def _loadBatchArguments(sys_args):
     parser.add_argument("-schedule_frequency", required=False, default="Hour", type=str, help="Pipeline frequency") 
     parser.add_argument("-schedule_interval", required=False, default=1, type=int, help="Pipeline interval") 
 
-    parser.add_argument("-batch_script_folder", required=False, default="./batch", type=str, help="Local data directory holding batch script.") 
-    parser.add_argument("-batch_script", required=False, default="batch.py", type=str, help="Python file to run in batch mode") 
-    parser.add_argument("-result_file", required=False, default="results.txt", type=str, help="Output file name for batch.") 
-
-    
 
     parsed_arguments = parser.parse_args(sys_args)
     '''

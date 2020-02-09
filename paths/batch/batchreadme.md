@@ -1,7 +1,15 @@
 # Batch Scoring Example
 <sup> Daniel Grecoe - A Microsoft Employee</sup>
 
-This code creates an Azure Machine Learning Batch Scoring service. The code in this repository can be run on Windows or Linux.
+This code creates an Azure Machine Learning Batch Scoring service into your Azure subscription. 
+
+The code in this repository can be run on Windows or Linux with no restrictions as the docker container image is not tested locally.
+
+The batch scoring service deployed will utilize Azure Storage for both input and output sources to the batch model. The Azure Storage account used is the one that is created by the Azure Machine Learning service.
+
+The deployed scoring script does not utilize any actual Machine Learing/AI models but simply prints out information to the output to show that it did, in fact, run. 
+
+The purpose of this example is to exhibit the steps and services neccesary for deploying an Azure Machine Learning Batch Service in your subscripiton only. No actual data science and model building are performed in this example. 
 
 You will need
 - A devlopment environment with anaconda installed. 
@@ -28,21 +36,25 @@ During the creation of this solution the following Azure Services are created in
 |Application Insights|Application insights is used to capture metrics and other data related to a published model/endpoint.|
 
 ## Batch Scoring Repository Content
+The main source files for this project are described in the master README.MD file in the respository. 
+
+Repository content described there is not duplicated here. 
+
+This table describes only what is in this directory.
+
 |Item|Type|Description|
 |----|----|-----------|
-|contexts|Directory|Contains implementations of Real Time Scoring and Batch Scoring models.|
-|scripts|Directory|Contains utility scripts for loading configuration and making the actual Azure SDK calls.|
-|environment.yml|File|Environment file to feed to conda to create the development environment to run this project.|
+|scoring|Directory|Contains two files that are used when deploying the service :<br><br>- data.txt : The mock input file to the batch scoring service. <br><br>- batch.py : The source file behind the actual bach scoring process.| 
 |batchconfiguration.md|File|Describes the different ways to provide configuration settings to the main batch scoring script (batchcreate.py)|
 |batchconfiguration.json|File|Example configuration file as described in batchconfiguration.md.|
-|batchcreate.py|File|The main script that will perform all of the creation steps of the Azure Machine Learning workspace from resource group creation through to the deployment of an Azure Machine Learning Real batch scoring pipeline.|
+|batchreadme.md|File|The file you are reading now.|
 
 
 <b>NOTE</b>: Re-running the code over and over will not produce anything outside of the original scope. At each step before any service, compute or pipeline is created, the Azure Machine Learning workspace is scanned for the item. If it exists, no new service is created. 
 
 
 # Batch Scoring Scripts
-
+These scripts are found in at the head of the master repository, but details of how they perform the actions neccesary are described here.
 
 ## Script: batchcreate.py
 

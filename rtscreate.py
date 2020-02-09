@@ -102,7 +102,7 @@ job_log.dumpLog()
 '''
     Clean up temporary files
 '''
-temp_files = ["simple.yml", "model.pkl"]
+temp_files = ["simple.yml", "model.pkl", "scoring.py"]
 for f in temp_files:
     if os.path.exists(f):
         os.remove(f)
