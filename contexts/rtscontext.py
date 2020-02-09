@@ -40,7 +40,7 @@ class RealTimeScoringContext(BaseContext):
 
     def generateImage(self):
         '''
-            Generates an image, get name and version using:
+            Generates a docker image, get name and version using:
             print(image.name, image.version)
             Logs here:
             image.image_build_log_uri

@@ -19,6 +19,7 @@ class BatchScoringContext(BaseContext):
     input_reference_name = "inputdataref"
     output_store_name = "outputdata"
     output_reference_name = "outputdataref"
+
     # Pipeline information
     pip_packages = []
     python_version = "3.6.7"
@@ -90,16 +91,23 @@ class BatchScoringContext(BaseContext):
 
     def createPipelineDataReferences(self):
         '''
-            Create data references for the pipeline to both the input
-            and output data (azure blob locations)
+            Datastores identify where data is coming from and going to in the process. This 
+            function checks to see if a data store with the same name has already been registered.
+
+            If not, it registers it, if so it uses the exsiting store.
+
+            Stores are then wrapped in a DataReference object that will be used in the pipeline steps. 
+
+            For this example, we need two references. One for the input data file, one for the output results file. 
+            Both reside in the storage account from the AMLS workspace.
         '''
 
         storage_details = self.workspace.get_default_datastore()
 
         '''
             Have to create one for input and one for output. 
-            self.programArguments.source_container
-            self.programArguments.result_container
+            self.programArguments.source_container - identifies the container name for the data file
+            self.programArguments.result_container - identifies the container name for the results file(s)
         '''
         requested_datasets = {}
 
@@ -150,21 +158,34 @@ class BatchScoringContext(BaseContext):
         run_config.environment.docker.enabled = True
 
         '''
-            Next we need to let the pipeline know which store the output is going.
+            Next we need to let the pipeline know which store the output is going. This is expected
+            to be a PipelineData object. That object expects:
 
-            The name here is going to be the directory we will output results to and the data store
-            is where we want to put stuff.
+            name = The directory on the cluster machine in which output is expected.
+            datastore = Identifies the end storage. In this case an Azure Storage account complete with 
+                        container name and file name in which to deposit in the storage account. 
         '''
         prediction_ref = PipelineData(name="preds", datastore=self.outputDataStore, is_directory=True)
         '''
             Next we create a step for a pipeline. 
 
             WE tell it where out script is, 
-                what arguments the script will accept : input file, input directory, output file, output directory
-                the input data store reference, 
-                the output data store reference, 
-                the target to run on 
-                the configurationin which to run it in.
+                Script information:
+                    The directory in which the python script is located on the local machine
+                    The file name of the script that will be uploaded.
+                Script Arguments:
+                    This is what arguments the script will accept. In our example they are:
+                        input file, input directory, output file, output directory
+                inputs: 
+                    This is a list of data inputs. In this example it is the Azure Storage account/container/file
+                    combination that holds our data file.  
+                outputs: 
+                    This is a list of outputs. In this example it is the Azure Storage account/container/file 
+                    combination that the script creates.  
+                compute_target:
+                    The compute target we attached to the AML service that will process requests. 
+                run_config: 
+                    This is the conda / python depenencies that the resultant container requires to execute succesfully. 
         '''
         self.pipelineStep = PythonScriptStep(
             name="basic_pipeline_step",
@@ -184,7 +205,13 @@ class BatchScoringContext(BaseContext):
 
     def createPipeline(self):
         '''
-            If we do not have a pipeline by the given name, then create one. 
+            A pipeline is a series of steps but also requires DataReference objects in those steps so 
+            that it where to get data from and where to deposit outputs. 
+
+            In this step, if a PublishedPipeline exists by name, a new pipeline is not created. 
+
+            If it is created a new docker conainer is generated in the ACR instance associated with this 
+            AMLS workspace. 
         '''
         self.publishedPipeline = getExistingPipeline(self.workspace, self.programArguments.pipeline_name)
 
@@ -202,7 +229,13 @@ class BatchScoringContext(BaseContext):
             self.publishedPipeline = self.pipeLine.publish(name=self.programArguments.pipeline_name, description="Dummy Pipeline")
 
             '''
-                Now we schedule it
+                Now we schedule it. This step on it's own will create the AMLS experiment tied to this 
+                service. 
+
+                Unlike with the RTS example, no model is creted in this step. 
+
+                Next we generate the schedule recurrence, when this pipeline should run, and finally create
+                the schedule by identifying the published pipeline that is being requested. 
             '''
             print("Scheduling pipeline .....")
             experiment_name = "exp_" + self.programArguments.pipeline_name
@@ -220,6 +253,9 @@ class BatchScoringContext(BaseContext):
                     description = "Pipeline schedule for {}".format(self.programArguments.pipeline_name),
                     )
 
+        '''
+            Print out what we know of the pipeline. In particular it's status and the endpoint. 
+        '''
         print("Pipeline : ", self.publishedPipeline.name )        
         print("Pipeline Endpoint: ", self.publishedPipeline.endpoint)
         print("Pipeline Status: ", self.publishedPipeline.status)

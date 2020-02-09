@@ -34,28 +34,31 @@ try:
 
 
     '''
-        Get a workspace
+        Get or create an AMLS workspace. If the settings identify an existing 
+        workspace, that workspace is retrieved. 
     '''
     job_log.startStep("Workspace")
     program_context.generateWorkspace()
     job_log.endStep("Workspace")
 
     '''
-        Get or create an experiment
+        Get or create an AMLS experiment. 
     '''
     job_log.startStep("Experiment")
     program_context.generateExperiment()
     job_log.endStep("Experiment")
 
     '''
-        Get existing or create and register model
+        Get or create and AMLS model. 
     '''
     job_log.startStep("Model")
     program_context.generateModel()
     job_log.endStep("Model")
 
     '''
-        Create or update the container image
+        Get or create (create could just update a registered container)
+        a docker container image. This is then uploaded to the attached
+        ACR instance.
     '''
     job_log.startStep("Container Image")
     if program_context.loadImage() == False:
@@ -64,11 +67,11 @@ try:
     job_log.endStep("Container Image")
 
     '''
-        Create/attach existing compute target
-
-        To attach, you have to provide the cluster name and resource group name
-        in the program arguments. By default they are set to None so that a new cluster
-        is generated.
+        Get or create an AKS compute target.
+        
+        By providing a resource group and compute name, an existing
+        cluster can be attached to the AMLS service. Otherwise a new cluster
+        would be created and attached to the AMLS service. 
     '''
     job_log.startStep("Compute Target")
     program_context.generateComputeTarget(
@@ -78,7 +81,8 @@ try:
     job_log.endStep("Compute Target")
 
     '''
-        Create service
+        Get or create the web service that acts as the REST endpoint for this
+        example. If creating, it creates a new service on the attached AKS cluster.
     '''
     job_log.startStep("Web Service")
     program_context.generateWebService()
@@ -89,6 +93,10 @@ try:
             job_log.addInfo("{} - {}".format(key, program_context.webserviceapi[key] ))
     job_log.endStep("Web Service")
 
+    '''
+        Regardless of if we created or just retrieved an existin service, test it to 
+        ensure it is responsive. 
+    '''
     job_log.startStep("Web Service Test")
     program_context.testWebService()
     job_log.endStep("Web Service Test")
