@@ -4,7 +4,7 @@
 The code in this repository sets up different versions of an Azure Machine Learning Service. 
 
 ## Azure Machine Learning Real Time Scoring Service
-For detailed information on the Azure Machine Learning Real Time Scoring Service deployed in this example read [this document]("./paths/realtime/rtsreadme.md").
+For detailed information on the Azure Machine Learning Real Time Scoring Service deployed in this example read [this document](paths/realtime/rtsreadme.md).
 
 A real time scoring service is a REST endpoint in which consumers of the endpoint send in individual records to be scored synchronously. Applications for such a service can be found in predicitive maintenance or other applications where some immediate action should occur. 
 
@@ -13,7 +13,7 @@ For example, a model is deployed for in a factory setting. At a given cadence th
 The real time scoring service would then predict if the machine is about to experience some sort of issue. Business logic built with this endpoint could then shut down the machine or schedule a maintenance ticket. 
 
 ## Azure Machine Learning Batch Scoring Service
-For detailed information on the Azure Machine Learning Batch Scoring Service deployed in this example read [this document]("./paths/batch/batchreadme.md").
+For detailed information on the Azure Machine Learning Batch Scoring Service deployed in this example read [this document](paths/batch/batchreadme.md).
 
 A batch scoring service is an asynchronous service that can be run either on a schedule or when triggered. Applications for such a service can be found in financial services or other applications where periodic scoring of large numbers of records are required and immediate action is not neccesary. 
 
