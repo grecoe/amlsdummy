@@ -17,8 +17,8 @@ class RealTimeScoringContext(BaseContext):
     '''
         Contains the context needed to perform the tasks. 
     '''
-    def __init__(self, programArgs, userAuthorization):
-        super().__init__(programArgs, userAuthorization)
+    def __init__(self, programArgs, userAuthorization, job_log = None):
+        super().__init__(programArgs, userAuthorization, job_log)
         self.containerImage = None
         self.computeTarget = None
         self.webservice = None
@@ -32,7 +32,8 @@ class RealTimeScoringContext(BaseContext):
             self.workspace,
             self.experiment,
             self.programArguments.model_name,
-            RealTimeScoringContext.model_file
+            RealTimeScoringContext.model_file,
+            self.job_log
             )
 
         if not self.model:
@@ -53,7 +54,8 @@ class RealTimeScoringContext(BaseContext):
             self.workspace,
             RealTimeScoringContext.scoring_script_name,
             self.model,
-            self.programArguments.image_name)
+            self.programArguments.image_name,
+            self.job_log)
 
         if not self.containerImage:
             raise Exception("Container Image Creation Failed")
@@ -118,7 +120,8 @@ class RealTimeScoringContext(BaseContext):
                 self.programArguments.aks_compute_name, 
                 self.programArguments.aks_vm_size, 
                 self.programArguments.aks_node_count,
-                self.programArguments.aks_non_prod
+                self.programArguments.aks_non_prod,
+                self.job_log
                 )
         else:
             print("Option is to attach existing compute target....")
@@ -127,7 +130,8 @@ class RealTimeScoringContext(BaseContext):
                 cluster_name, 
                 resource_group, 
                 self.programArguments.aks_compute_name,
-                self.programArguments.aks_non_prod
+                self.programArguments.aks_non_prod,
+                self.job_log
                 )
 
         if not self.computeTarget:
@@ -144,7 +148,8 @@ class RealTimeScoringContext(BaseContext):
                 self.programArguments.aks_service_name, 
                 self.programArguments.aks_num_replicas, 
                 self.programArguments.aks_cpu_cores, 
-                self.computeTarget
+                self.computeTarget,
+                self.job_log
                 )
 
         if not self.webservice:

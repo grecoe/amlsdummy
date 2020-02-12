@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
 scripts/__pycache__/
+contexts/__pycache__/
 simple.yml
 model.pkl
 Logs/

@@ -29,7 +29,7 @@ try:
     job_log.startStep("Setup")
     programargs = loadConfiguration(ExperimentType.real_time_scoring,sys.argv[1:])
     userAuth = get_auth()
-    program_context = RealTimeScoringContext(programargs, userAuth)
+    program_context = RealTimeScoringContext(programargs, userAuth, job_log)
     job_log.endStep("Setup")
 
 

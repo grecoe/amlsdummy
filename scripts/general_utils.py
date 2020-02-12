@@ -1,5 +1,6 @@
 import pickle
 import os
+import json
 from enum import Enum
 from datetime import datetime, timedelta
 
@@ -17,7 +18,7 @@ class JobLog:
         self.job_type = jobtype
         self.job_directory = jobtype.value + JobLog.logs_directory
         self.job_steps = {}
-        self.job_info = []
+        self.job_info = {}
         self.total_start = None
 
     def startStep(self, step_name):
@@ -32,7 +33,14 @@ class JobLog:
             self.job_steps[step_name][JobLog.step_end] = datetime.now()
     
     def addInfo(self, info):
-        self.job_info.append(info)
+        stamp = str(datetime.now())
+        orig_stamp = stamp
+        idx_counter = 1
+        while stamp in self.job_info.keys():
+            stamp = "{}({})".format(orig_stamp, idx_counter)
+            idx_counter += 1
+
+        self.job_info[stamp] = info
 
     def _dumpGeneral(self, log_path, total_time):
 
@@ -64,11 +72,29 @@ class JobLog:
         file_path = os.path.join(log_path, file_name)
 
         with open(file_path, "w") as log_output:
+            log_object = {}
+            log_object["type"] = self.job_type.value
+            log_object["total_runtime"] = total_run_time.total_seconds()
+            log_object["info"] = self.job_info
+            log_object["steps"] = {}
+
+            for step in self.job_steps.keys():
+                time_delta = "Incomplete"
+                if JobLog.step_start in self.job_steps[step].keys() and JobLog.step_end in self.job_steps[step].keys():
+                    time_delt = self.job_steps[step][JobLog.step_end] - self.job_steps[step][JobLog.step_start]
+                    time_delta = time_delt.total_seconds()
+                
+                log_object["steps"][step] = time_delta
+
+            log_output.writelines(json.dumps(log_object, indent = 4))                
+
+
+            '''
             log_output.writelines("Job Type: {}\n".format(self.job_type.value))
             log_output.writelines("Total Run Time: {} seconds\n".format(total_run_time.total_seconds()))
             log_output.writelines("Job Info: \n")
             for info in self.job_info:
-                log_output.writelines("    " + info + "\n")
+                log_output.writelines("{} : {}\n".format(info["time"], info["info"]))
 
             log_output.writelines("Job Steps: \n")
             for step in self.job_steps.keys():
@@ -77,7 +103,8 @@ class JobLog:
                     log_output.writelines("    {} - {} seconds \n".format(step, time_delt.total_seconds()))
                 else:
                     log_output.writelines("    {} - {} \n".format(step, self.job_steps[step]))
-        
+            '''
+
         self._dumpGeneral(file_path, total_run_time.total_seconds())
 
 

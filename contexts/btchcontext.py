@@ -27,8 +27,8 @@ class BatchScoringContext(BaseContext):
     '''
         Contains the context needed to perform the tasks. 
     '''
-    def __init__(self, programArgs, userAuthorization):
-        super().__init__(programArgs, userAuthorization)
+    def __init__(self, programArgs, userAuthorization, job_log = None):
+        super().__init__(programArgs, userAuthorization, job_log)
         self.computeTarget = None
         self.inputDataStore = None
         self.inputDataReference = None
@@ -54,7 +54,8 @@ class BatchScoringContext(BaseContext):
         createStorageContainer(
             storage_details.account_name,
             storage_details.account_key,
-            storage_container_names)
+            storage_container_names,
+            self.job_log)
 
     def uploadDataFiles(self):
         '''
@@ -69,7 +70,8 @@ class BatchScoringContext(BaseContext):
             storage_details.account_key,
             self.programArguments.source_container,
             BatchScoringContext.batch_data_directory,
-            data_files)
+            data_files,
+            self.job_log)
 
     def generateCompute(self):
         '''
@@ -83,7 +85,8 @@ class BatchScoringContext(BaseContext):
             self.programArguments.batch_compute_name,
             self.programArguments.batch_vm_size,
             self.programArguments.batch_vm_max,
-            self.programArguments.batch_vm_min
+            self.programArguments.batch_vm_min,
+            self.job_log
         )
         
         if not self.computeTarget:
@@ -129,7 +132,8 @@ class BatchScoringContext(BaseContext):
                             storage_details.account_key,
                             requested_datasets[requested][0],
                             requested_datasets[requested][1],
-                            requested_datasets[requested][2]
+                            requested_datasets[requested][2],
+                            self.job_log
                         )
 
             '''
@@ -213,12 +217,16 @@ class BatchScoringContext(BaseContext):
             If it is created a new docker conainer is generated in the ACR instance associated with this 
             AMLS workspace. 
         '''
-        self.publishedPipeline = getExistingPipeline(self.workspace, self.programArguments.pipeline_name)
+        self.publishedPipeline = getExistingPipeline(self.workspace, self.programArguments.pipeline_name, self.job_log)
 
         if self.publishedPipeline :
             print("Found existing pipeline - ", self.programArguments.pipeline_name)
+            if self.job_log:
+                self.job_log.addInfo("PublishedPipeline {} exists".format(self.programArguments.pipeline_name))
         else:
             print("Creating  pipeline - ", self.programArguments.pipeline_name)
+            if self.job_log:
+                self.job_log.addInfo("Creating PublishedPipeline {}".format(self.programArguments.pipeline_name))
 
             print("Creating pipeline steps .....")
             self._createPipelineSteps()

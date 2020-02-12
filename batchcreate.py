@@ -23,7 +23,7 @@ try :
     job_log.startStep("Setup")
     programargs = loadConfiguration(ExperimentType.batch_scoring,sys.argv[1:])
     userAuth = get_auth()
-    program_context = BatchScoringContext(programargs, userAuth)
+    program_context = BatchScoringContext(programargs, userAuth, job_log)
     job_log.endStep("Setup")
 
 
