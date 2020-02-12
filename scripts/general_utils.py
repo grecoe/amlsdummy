@@ -20,11 +20,16 @@ class JobLog:
         self.job_steps = {}
         self.job_info = {}
         self.total_start = None
+        self.currentStep = None
 
+    def lastStep(self):
+        return self.currentStep
+        
     def startStep(self, step_name):
         if len(self.job_steps) == 0:
             self.total_start = datetime.now()
 
+        self.currentStep = step_name
         self.job_steps[step_name] = {}
         self.job_steps[step_name][JobLog.step_start] = datetime.now()
 

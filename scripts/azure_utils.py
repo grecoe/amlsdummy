@@ -26,7 +26,7 @@ from scripts.general_utils import createPickle
 
 def _addLogInfo(job_log, info):
     if job_log:
-        job_log.addInfo(info)
+        job_log.addInfo("{} - {}".format(job_log.lastStep(), info))
 
 def get_auth():
     '''

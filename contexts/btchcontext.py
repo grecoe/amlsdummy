@@ -222,11 +222,11 @@ class BatchScoringContext(BaseContext):
         if self.publishedPipeline :
             print("Found existing pipeline - ", self.programArguments.pipeline_name)
             if self.job_log:
-                self.job_log.addInfo("PublishedPipeline {} exists".format(self.programArguments.pipeline_name))
+                self.job_log.addInfo("{} - PublishedPipeline {} exists".format(self.job_log.lastStep() , self.programArguments.pipeline_name))
         else:
             print("Creating  pipeline - ", self.programArguments.pipeline_name)
             if self.job_log:
-                self.job_log.addInfo("Creating PublishedPipeline {}".format(self.programArguments.pipeline_name))
+                self.job_log.addInfo("{} - Creating PublishedPipeline {}".format(self.job_log.lastStep() ,self.programArguments.pipeline_name))
 
             print("Creating pipeline steps .....")
             self._createPipelineSteps()
