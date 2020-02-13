@@ -23,11 +23,17 @@ from azure.storage.blob import BlobServiceClient
 from azure.storage.blob import BlobClient
 from scripts.general_utils import createPickle
 
-
-def _addLogInfo(job_log, info):
+'''******************************************************
+    Generic global functions used throughout the file.
+******************************************************'''
+def reportStatus(job_log, info):
     if job_log:
         job_log.addInfo("{} - {}".format(job_log.lastStep(), info))
+    print(info)
 
+'''******************************************************
+    Authorization/Azure Context
+******************************************************'''
 def get_auth():
     '''
         Retreive the user authentication. If they aren't logged in this will
@@ -39,7 +45,7 @@ def get_auth():
     '''
     auth = None
     
-    print("Get auth...")
+    reportStatus(None, "Get auth...")
     try:
         auth = AzureCliAuthentication()
         auth.get_authentication_header()
@@ -63,7 +69,7 @@ def setContext(subscription_id):
             Exception if output is not empty. As of the writing of this 
             a succesful call has no output. 
     '''
-    print("Setting context....")
+    reportStatus(None, "Setting context....")
 
     set_command = "az account set --subscription " + subscription_id
     stream = os.popen(set_command)
@@ -72,9 +78,13 @@ def setContext(subscription_id):
     if len(output) != 0:
         raise Exception("Context Exception : " + output)
 
-def getWorkspace(authentication, subscription_id, resource_group, workspace_name,  workspace_region, job_log = None):
+
+'''******************************************************
+    Locating existing services
+******************************************************'''
+def getExistingWorkspace(authentication, subscription_id, resource_group, workspace_name, job_log = None):
     '''
-        Obtains an existing workspace, or creates a new one. If a workspace exists in the subscription
+        Obtains an existing workspace. If a workspace exists in the subscription
         in the same resource group, with the same name it is returned, otherwise, a new one is created.
 
         PARAMS: 
@@ -82,16 +92,15 @@ def getWorkspace(authentication, subscription_id, resource_group, workspace_name
             subscription_id  : String                        : Azure Subscription ID
             resource_group   : String                        : Azure Resource Group Name
             workspace_name   : String                        : AMLS workspace name
-            workspace_region : String                        : Azure Region
             job_log          : azureutlils.JobLog            : Log for addInfo(info)
 
         RETURNS: 
-            azureml.core.Workspace
+            azureml.core.Workspace or None if not found
     '''
-    return_workspace = None
-    useExistingWorkspace = False
-    workspaces = None
+    existing_workspace = None
     
+    workspaces = None
+    useExistingWorkspace = False
     '''
         If resource group doesn't exist, this will throw a ProjectSystemException  
     '''
@@ -112,17 +121,159 @@ def getWorkspace(authentication, subscription_id, resource_group, workspace_name
         Return existing or create new
     '''
     if useExistingWorkspace:
-        print("Loading existing workspace ....", workspace_name)
-        _addLogInfo(job_log, "AMLS Workspace {} exists".format(workspace_name))
-        return_workspace = Workspace.get(
+        reportStatus(job_log, "AMLS Workspace {} exists".format(workspace_name))
+        existing_workspace = Workspace.get(
             name = workspace_name,
             subscription_id = subscription_id,
             resource_group = resource_group
-            )
-    else:
+            )    
+
+    return existing_workspace 
+
+def getExistingExperiment(workspace, experiment_name, job_log = None):
+    '''
+        Gets an existing AMLS experiment. 
+
+        PARAMS: 
+            workspace        : azureml.core.Workspace   : Existing AMLS Workspace
+            experiment_name  : String                   : Name of experiment to retrieve/create
+            job_log          : azureutlils.JobLog       : Log for addInfo(info)
+
+        RETURNS: 
+            azureml.core.Experiment
+    '''
+    return_experiment = None
+    for experiment in Experiment.list(workspace):
+        if experiment.name == experiment_name:
+            reportStatus(job_log, "AMLS Experiment {} exists".format(experiment_name))
+            return_experiment = experiment
+
+    return return_experiment
+
+def getExistingContainerImage(workspace, image_name, job_log = None):
+    '''
+        Gets a container image associated with workspace. 
+
+        PARAMS: 
+            workspace        : azureml.core.Workspace   : Existing AMLS Workspace
+            image_name       : String                   : Name of container image to find
+            job_log          : azureutlils.JobLog       : Log for addInfo(info)
+
+        RETURNS: 
+            azureml.core.image.ContainerImage or None if not found
+    '''
+    return_image = None
+
+    containers = ContainerImage.list(workspace= workspace, image_name = image_name)
+    if len(containers) > 0:
+        reportStatus(job_log, "Container image {} exists.".format(image_name))
+        return_image = containers[-1]
+
+    return return_image
+
+def getExistingModel(workspace, model_name, job_log = None):
+    '''
+        Find an existing model associated with a workspace.
+
+        PARAMS: 
+            workspace        : azureml.core.Workspace   : Existing AMLS Workspace
+            model_name       : String                   : The name of the model to register
+            job_log          : azureutlils.JobLog       : Log for addInfo(info)
+
+
+        RETURNS: 
+            azureml.core.Model
+    '''
+    return_model = None
+
+    '''
+        If model already exists then just return it. 
+    '''
+    models = Model.list(workspace)
+    if models:
+        for model in models:
+            if model.name == model_name:
+                reportStatus(job_log, "AMLS Model {} exists".format(model_name))
+                return_model = model
+                break
+    return return_model
+
+def getExistingCompute(workspace, compute_name, job_log = None):
+    '''
+        Tries to load an existing AMLS compute target by name searching
+        a specified AMLS workspace
+
+        PARAMS: 
+            workspace        : azureml.core.Workspace   : Existing AMLS Workspace
+            compute_name     : String                   : Name of the AMLS compute to locate.
+            job_log          : azureutlils.JobLog       : Log for addInfo(info)
+
+
+        RETURNS: 
+            azureml.core.compute.ComputeTarget or None if not found
+    '''
+    existing_compute = None
+
+    targets = ComputeTarget.list(workspace)
+    if len(targets) > 0:
+        for target in targets:
+            if target.name == compute_name:
+                reportStatus(job_log, "Compute {} exists ".format(compute_name))
+                existing_compute = target
+                break
+
+    return existing_compute
+
+def getExistingWebService(workspace, container_image, service_name, job_log = None):
+    '''
+        Get an existing WebService associated with the workspace.
+
+        PARAMS: 
+            workspace        : azureml.core.Workspace               : Existing AMLS Workspace
+            container_image  : azureml.core.image.ContainerImage    : Name of an existing AKS cluster 
+            service_name     : String                               : Name of the webservice (deployment) in the AMLS workpsace.
+            job_log          : azureutlils.JobLog                   : Log for addInfo(info)
+
+        RETURNS: 
+            azureml.core.webservice.Webservice or None
+
+    '''
+    web_service = None
+
+    services = Webservice.list(workspace = workspace, image_name = container_image.name)
+    if len(services) > 0:
+        for svc in services:
+            if svc.name == service_name:
+                reportStatus(job_log, "Web service {} exists".format(service_name))
+                web_service = svc
+                break
+
+    return web_service
+
+'''******************************************************
+    Creating/retrieving services
+******************************************************'''
+def getOrCreateWorkspace(authentication, subscription_id, resource_group, workspace_name,  workspace_region, job_log = None):
+    '''
+        Obtains an existing workspace, or creates a new one. If a workspace exists in the subscription
+        in the same resource group, with the same name it is returned, otherwise, a new one is created.
+
+        PARAMS: 
+            authentication   : azureml.core.authentication   : User Authentication with rights to sub 
+            subscription_id  : String                        : Azure Subscription ID
+            resource_group   : String                        : Azure Resource Group Name
+            workspace_name   : String                        : AMLS workspace name
+            workspace_region : String                        : Azure Region
+            job_log          : azureutlils.JobLog            : Log for addInfo(info)
+
+        RETURNS: 
+            azureml.core.Workspace
+    '''
+    return_workspace = getExistingWorkspace(authentication, subscription_id, resource_group, workspace_name, job_log)
+    
+    if return_workspace == None:
         # Create one
-        print("Creating new workspace ....", workspace_name)
-        _addLogInfo(job_log, "Creating AMLS Workspace {}".format(workspace_name))
+        reportStatus(job_log, "Creating AMLS Workspace {}".format(workspace_name))
         return_workspace = Workspace.create(
             name = workspace_name,
             subscription_id = subscription_id,
@@ -133,7 +284,7 @@ def getWorkspace(authentication, subscription_id, resource_group, workspace_name
 
     return return_workspace #  program_context.workspace.get_details() 
 
-def getExperiment(workspace, experiment_name, job_log = None):
+def getOrCreateExperiment(workspace, experiment_name, job_log = None):
     '''
         Gets an AMLS experiment. Searches through the provided workspace experiments first
         to see if it already exists. If not, create a new one, otherwise return the existing one. 
@@ -146,24 +297,15 @@ def getExperiment(workspace, experiment_name, job_log = None):
         RETURNS: 
             azureml.core.Experiment
     '''
-    found = False
-    return_experiment = None
-    for experiment in Experiment.list(workspace):
-        if experiment.name == experiment_name:
-            print("Returning existing experiment", experiment_name)
-            _addLogInfo(job_log, "AMLS Experiment {} exists".format(experiment_name))
-            found = True
-            return_experiment = experiment
-
+    return_experiment = getExistingExperiment(workspace, experiment_name, job_log)
     
-    if not found:
-        print("Creating new experiment", experiment_name)
-        _addLogInfo(job_log, "Creating AMLS Experiment {}".format(experiment_name))
+    if return_experiment == None:
+        reportStatus(job_log, "Creating AMLS Experiment {}".format(experiment_name))
         return_experiment = Experiment(workspace, experiment_name)
 
     return return_experiment
 
-def registerModel(workspace, experiment, model_name, model_file, job_log = None):
+def getOrRegisterModel(workspace, experiment, model_name, model_file, job_log = None):
     '''
         Search an existing AMLS workspace for models. If one is found, return it, 
         otherwise create a new model. 
@@ -173,7 +315,7 @@ def registerModel(workspace, experiment, model_name, model_file, job_log = None)
 
         PARAMS: 
             workspace        : azureml.core.Workspace   : Existing AMLS Workspace
-            experiment_name  : azureml.core.Experiment  : Existing AMLS Experiment
+            experiment       : azureml.core.Experiment  : Existing AMLS Experiment
             model_name       : String                   : The name of the model to register
             model_file       : String                   : This is one of two values
                                                             1. Name of a pkl file to create (dummy for RTS)
@@ -186,26 +328,14 @@ def registerModel(workspace, experiment, model_name, model_file, job_log = None)
             azureml.core.Model
     '''
 
-    return_model = None
+    return_model = getExistingModel(workspace, model_name, job_log)
 
-    '''
-        If model already exists then just return it. 
-    '''
-    models = Model.list(workspace)
-    if models:
-        for model in models:
-            if model.name == model_name:
-                print("Returning existing model....", model_name)
-                _addLogInfo(job_log, "AMLS Model {} exists".format(model_name))
-                return_model = model
-                break
 
-    if not return_model:
+    if return_model == None:
         '''
             Create it. 
         '''
-        print("Creating new  model....", model_name)
-        _addLogInfo(job_log, "Creating AMLS Model {}".format(model_name))
+        reportStatus(job_log, "Creating AMLS Model {}".format(model_name))
         run = experiment.start_logging()
         run.log("Just simply dumping somethign in", True)
 
@@ -250,8 +380,7 @@ def createImage(workspace, scoring_file, model, image_name, job_log = None ):
     conda_pack = []
     requirements = ["azureml-defaults==1.0.57", "azureml-contrib-services"]
 
-    print("Creating image...")
-    _addLogInfo(job_log, "Creating container image {}".format(image_name))
+    reportStatus(job_log, "Creating container image {}".format(image_name))
 
     simple_environment = CondaDependencies.create(conda_packages=conda_pack, pip_packages=requirements)
 
@@ -275,36 +404,9 @@ def createImage(workspace, scoring_file, model, image_name, job_log = None ):
     )
 
     image.wait_for_creation(show_output = True)
-    print("Image created IMAGE/VERSION: " , image.name, '/',  image.version)
+    reportStatus(None, "Image created IMAGE/VERSION: " , image.name, '/',  image.version)
     
     return image
-
-def _getExistingCompute(workspace, compute_name, job_log = None):
-    '''
-        Tries to load an existing AMLS compute target by name searching
-        a specified AMLS workspace
-
-        PARAMS: 
-            workspace        : azureml.core.Workspace   : Existing AMLS Workspace
-            compute_name     : String                   : Name of the AMLS compute to locate.
-            job_log          : azureutlils.JobLog       : Log for addInfo(info)
-
-
-        RETURNS: 
-            azureml.core.compute.ComputeTarget or None if not found
-    '''
-    existing_compute = None
-
-    targets = ComputeTarget.list(workspace)
-    if len(targets) > 0:
-        for target in targets:
-            if target.name == compute_name:
-                print("Found existing compute with name ", compute_name)
-                _addLogInfo(job_log, "Compute {} exists ".format(compute_name))
-                existing_compute = target
-                break
-
-    return existing_compute
 
 def _getClusterPurpose(dev_test):
     '''
@@ -324,7 +426,7 @@ def _getClusterPurpose(dev_test):
         purpose = AksCompute.ClusterPurpose.DEV_TEST
     return purpose
 
-def createBatchComputeCluster(workspace, compute_name, compute_sku, max_node_count, min_node_count, job_log = None):
+def getOrCreateBatchComputeCluster(workspace, compute_name, compute_sku, max_node_count, min_node_count, job_log = None):
     '''
         Create new AKS cluster, unless there is an existing AMLS compute with the same 
         name already attached to the AMLS workspace. 
@@ -341,11 +443,10 @@ def createBatchComputeCluster(workspace, compute_name, compute_sku, max_node_cou
             azureml.core.compute.ComputeTarget
 
     '''
-    batch_target = _getExistingCompute(workspace, compute_name, job_log)
+    batch_target = getExistingCompute(workspace, compute_name, job_log)
     
     if batch_target == None:
-        print("Creating new Batch compute.....")
-        _addLogInfo(job_log, "Creating batch compute {}".format(compute_name))
+        reportStatus(job_log, "Creating batch compute {}".format(compute_name))
         prov_config = AmlCompute.provisioning_configuration(
             vm_size = compute_sku, 
             min_nodes = min_node_count,
@@ -361,11 +462,11 @@ def createBatchComputeCluster(workspace, compute_name, compute_sku, max_node_cou
         batch_target.wait_for_completion(show_output = True)
 
         batch_status = batch_target.get_status()
-        print("Batch Compute Status : ", batch_status)
+        reportStatus(None, "Batch Compute Status : ", batch_status)
 
     return batch_target
 
-def createComputeCluster(workspace, region, compute_name, compute_sku, node_count, dev_cluster, job_log = None):
+def getOrCreateComputeCluster(workspace, region, compute_name, compute_sku, node_count, dev_cluster, job_log = None):
     '''
         Create new AKS cluster, unless there is an existing AMLS compute with the same 
         name already attached to the AMLS workspace. 
@@ -386,11 +487,10 @@ def createComputeCluster(workspace, region, compute_name, compute_sku, node_coun
 
     '''
     purpose = _getClusterPurpose(dev_cluster)
-    aks_target = _getExistingCompute(workspace, compute_name, job_log)
+    aks_target = getExistingCompute(workspace, compute_name, job_log)
     
     if aks_target == None:
-        print("Creating new AKS compute.....")
-        _addLogInfo(job_log, "Creating AKS compute {}".format(compute_name))
+        reportStatus(job_log, "Creating AKS compute {}".format(compute_name))
         prov_config = AksCompute.provisioning_configuration(
             agent_count = node_count, 
             vm_size = compute_sku, 
@@ -431,13 +531,12 @@ def attachExistingCluster(workspace, cluster_name, resource_group, compute_name,
             azureml.core.compute.AksCompute
 
     '''
-    print("Attaching existing AKS compute.....")
 
     purpose = _getClusterPurpose(dev_cluster)
-    aks_target = _getExistingCompute(workspace, compute_name, job_log)
+    aks_target = getExistingCompute(workspace, compute_name, job_log)
 
     if aks_target == None:
-        _addLogInfo(job_log, "Attaching existing compute cluster {}".format(compute_name))
+        reportStatus(job_log, "Attaching existing compute cluster {}".format(compute_name))
 
         attach_config = AksCompute.attach_configuration(
             resource_group = resource_group,
@@ -450,7 +549,7 @@ def attachExistingCluster(workspace, cluster_name, resource_group, compute_name,
 
     return aks_target
 
-def createWebservice(workspace, container_image, service_name, replica_count, cores_count, compute_target, job_log = None):
+def getOrCreateWebservice(workspace, container_image, service_name, replica_count, cores_count, compute_target, job_log = None):
     '''
         TODO: Should allow for the overwrite flag. 
 
@@ -472,20 +571,10 @@ def createWebservice(workspace, container_image, service_name, replica_count, co
             azureml.core.webservice.Webservice
 
     '''
-    web_service = None
-
-    services = Webservice.list(workspace = workspace, image_name = container_image.name)
-    if len(services) > 0:
-        for svc in services:
-            if svc.name == service_name:
-                print("Returning existing deployed web service ....", service_name)
-                _addLogInfo(job_log, "Web service {} exists".format(service_name))
-                web_service = svc
-                break
+    web_service = getExistingWebService(workspace, container_image, service_name, job_log)
 
     if web_service == None:
-        print("Creating new web service.....", service_name)
-        _addLogInfo(job_log, "Creating Web service {}".format(service_name))
+        reportStatus(job_log, "Creating Web service {}".format(service_name))
         aks_config = AksWebservice.deploy_configuration(num_replicas=replica_count, cpu_cores=cores_count)
 
         web_service = Webservice.deploy_from_image(
@@ -522,11 +611,9 @@ def createStorageContainer(storage_name, storage_key, container_names, job_log =
     for container in container_names:
         try:
             blob_service.create_container(container)
-            print("Storage container created - ", storage_name, " : ", container)
-            _addLogInfo(job_log, "Created storage container {}".format(container))
+            reportStatus(job_log, "Created storage container {}".format(container))
         except ResourceExistsError: 
-            print("Storage container already exists - ", storage_name, " : ", container)
-            _addLogInfo(job_log, "Storage container {} exists".format(container))
+            reportStatus(job_log, "Storage container {} exists".format(container))
 
 def uploadStorageBlobs(storage_name, storage_key, container_name, local_folder, file_list, job_log = None):
     '''
@@ -552,11 +639,9 @@ def uploadStorageBlobs(storage_name, storage_key, container_name, local_folder, 
         with open(path, "rb") as data:    
             try:
                 blob_container.upload_blob(local_file, data)
-                print("File Uploaded : ", container_name,'-',local_file)
-                _addLogInfo(job_log, "Created storage blob {}".format(local_file))
+                reportStatus(job_log, "Created storage blob {}".format(local_file))
             except ResourceExistsError: 
-                print("File Exists : ", container_name,'-',local_file)
-                _addLogInfo(job_log, "Storage blob {} exists".format(local_file))
+                reportStatus(job_log, "Storage blob {} exists".format(local_file))
 
 def createDataReference(workspace, storage_name, storage_key, storage_container_name, data_store_name, data_reference_name, job_log = None):
     '''
@@ -581,11 +666,9 @@ def createDataReference(workspace, storage_name, storage_key, storage_container_
 
     try:
         data_store = Datastore.get(workspace, data_store_name)
-        print("Found existing data store - ", data_store_name)
-        _addLogInfo(job_log, "DataStore {} exists".format(data_store_name))
+        reportStatus(job_log, "DataStore {} exists".format(data_store_name))
     except Exception as ex:
-        print("Creating data store - ", data_store_name)
-        _addLogInfo(job_log, "Creating DataStore {}".format(data_store_name))
+        reportStatus(job_log, "Creating DataStore {}".format(data_store_name))
         
         data_store = Datastore.register_azure_blob_container(
                     workspace,

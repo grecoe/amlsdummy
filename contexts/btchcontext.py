@@ -80,7 +80,7 @@ class BatchScoringContext(BaseContext):
         if self.computeTarget:
             return self.computeTarget
 
-        self.computeTarget = createBatchComputeCluster(
+        self.computeTarget = getOrCreateBatchComputeCluster(
             self.workspace,
             self.programArguments.batch_compute_name,
             self.programArguments.batch_vm_size,

@@ -1,9 +1,13 @@
 # Byte-compiled / optimized / DLL files
 scripts/__pycache__/
 contexts/__pycache__/
+# Generated files running scripts
 simple.yml
 model.pkl
 Logs/
+# Local configuration files
 dantestrts.json
 dantestbatch.json
 dr-ml-cmk-v6-eastus.json
+# Local dev files
+keyvaulttest.py

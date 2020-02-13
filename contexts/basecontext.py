@@ -33,7 +33,7 @@ class BaseContext:
             Gets an existing workspace (by name) or creates a new one
         '''
         
-        self.workspace = getWorkspace(
+        self.workspace = getOrCreateWorkspace(
             self.authentication, 
             self.programArguments.subid, 
             self.programArguments.resourceGroup,
@@ -49,7 +49,7 @@ class BaseContext:
         '''
             Get an existing experiment by name, or create new
         '''
-        self.experiment = getExperiment(self.workspace, self.programArguments.experiment, self.job_log)
+        self.experiment = getOrCreateExperiment(self.workspace, self.programArguments.experiment, self.job_log)
 
         if not self.experiment:
             raise Exception("Experiment Creation Failed")

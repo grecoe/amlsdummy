@@ -28,7 +28,7 @@ class RealTimeScoringContext(BaseContext):
         '''
             Get an existing model by name or create new
         '''
-        self.model = registerModel(
+        self.model = getOrRegisterModel(
             self.workspace,
             self.experiment,
             self.programArguments.model_name,
@@ -68,11 +68,8 @@ class RealTimeScoringContext(BaseContext):
             if it loads then we've already done that step.
         '''
         if not self.containerImage:
-            containers = ContainerImage.list(workspace= self.workspace, image_name = self.programArguments.image_name)
-            if len(containers) > 0:
-                print("Found existing image, loading...")
-                self.containerImage = containers[-1]
-
+            self.containerImage = getExistingContainerImage(self.workspace, self.programArguments.image_name, self.job_log )
+            
         if self.containerImage != None:
             '''
                 With CMK testing, we really need to check this....it's possible an image 
@@ -114,7 +111,7 @@ class RealTimeScoringContext(BaseContext):
 
         if cluster_name is None and resource_group is None:
             print("Option is to create new compute target....")
-            self.computeTarget = createComputeCluster(
+            self.computeTarget = getOrCreateComputeCluster(
                 self.workspace, 
                 self.programArguments.region, 
                 self.programArguments.aks_compute_name, 
@@ -142,7 +139,7 @@ class RealTimeScoringContext(BaseContext):
             Generate the web service
         '''
         if not self.webservice:
-            self.webservice = createWebservice(
+            self.webservice = getOrCreateWebservice(
                 self.workspace, 
                 self.containerImage,
                 self.programArguments.aks_service_name, 
