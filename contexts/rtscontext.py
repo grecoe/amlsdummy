@@ -82,24 +82,6 @@ class RealTimeScoringContext(BaseContext):
 
         return self.containerImage != None
 
-    def testImage(self):
-        '''
-            Test the image locally only if version is Linux
-        '''   
-        if self.platform == 'linux':
-            if not self.containerImage:
-                containers = ContainerImage.list(workspace=self.workspace, image_name = self.programArguments.image_name)
-                if len(containers) > 0:
-                    self.containerImage = containers[-1]
-        
-            if self.containerImage:
-                result = self.containerImage.run(json.dumps({"name": "Dave"}))
-                print("RESULT: ", result)
-            else:
-                print("No container image found")
-        else:
-            print("Locat image testing only supported on Linux.")
-
     def generateComputeTarget(self, cluster_name = None, resource_group = None):
         '''
             Caller has to figure out if they are going to attach an existing cluster
@@ -133,6 +115,36 @@ class RealTimeScoringContext(BaseContext):
 
         if not self.computeTarget:
             raise Exception("Cannot create compute target.")
+    
+    def deleteWebservice(self):
+        if not self.webservice:
+            raise Exception("No web service loaded")
+        
+        print("Deleting web service...")
+        self.job_log.addInfo("Deleting web service")
+        self.webservice.delete()
+        self.webservice = None
+        self.job_log.addInfo("Web service deleted")
+
+    def loadWebservice(self):
+        '''
+            Retrieve an existing web service, used for deletion purposes. 
+        '''
+        if not self.workspace:
+            raise Exception("You must load the workspace first")
+
+        if not self.containerImage:
+            raise Exception("You must load the conatiner image first")
+
+        if not self.webservice:
+            self.webservice = getExistingWebService(
+                self.workspace, 
+                self.containerImage,
+                self.programArguments.aks_service_name, 
+                self.job_log
+                )
+
+        return self.webservice != None
 
     def generateWebService(self):
         '''

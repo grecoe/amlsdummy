@@ -265,7 +265,7 @@ def getOrCreateWorkspace(authentication, subscription_id, resource_group, worksp
             workspace_name   : String                        : AMLS workspace name
             workspace_region : String                        : Azure Region
             job_log          : azureutlils.JobLog            : Log for addInfo(info)
-
+            retrieve_only    : bool                          : Boolean flag, when true only retrieve don't create
         RETURNS: 
             azureml.core.Workspace
     '''
@@ -337,7 +337,7 @@ def getOrRegisterModel(workspace, experiment, model_name, model_file, job_log = 
         '''
         reportStatus(job_log, "Creating AMLS Model {}".format(model_name))
         run = experiment.start_logging()
-        run.log("Just simply dumping somethign in", True)
+        run.log("Just simply dumping something in", True)
 
         # If the file does not exist, create a dummy model file. 
         if os.path.exists(model_file) == False:
@@ -508,6 +508,7 @@ def getOrCreateComputeCluster(workspace, region, compute_name, compute_sku, node
 
         aks_status = aks_target.get_status()
         assert aks_status == 'Succeeded'
+        reportStatus(job_log, aks_status)
 
     return aks_target
 
@@ -546,6 +547,9 @@ def attachExistingCluster(workspace, cluster_name, resource_group, compute_name,
     
         if attach_config:
             aks_target = ComputeTarget.attach(workspace, compute_name, attach_config)
+            aks_target.wait_for_completion(show_output = True)
+            reportStatus(job_log, aks_target.get_status())
+
 
     return aks_target
 

@@ -9,5 +9,7 @@ Logs/
 dantestrts.json
 dantestbatch.json
 dr-ml-cmk-v6-eastus.json
+dg-ml-cmk-v1-eastus-nocmkaks.json
+dg-ml-cmk-v1-eastus.json
 # Local dev files
 keyvaulttest.py

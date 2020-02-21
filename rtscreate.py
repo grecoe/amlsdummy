@@ -63,7 +63,6 @@ try:
     job_log.startStep("Container Image")
     if program_context.loadImage() == False:
         program_context.generateImage()
-        program_context.testImage()
     job_log.endStep("Container Image")
 
     '''
@@ -104,6 +103,7 @@ try:
 except Exception as ex:
     job_log.addInfo("An error occured executing this path")
     job_log.addInfo(str(ex))
+    raise ex
 
 job_log.dumpLog()
 

@@ -27,10 +27,26 @@ class BaseContext:
         '''
         setContext(self.programArguments.subid)
 
+    def loadWorkspace(self):
+        '''
+            Used to only retrieve an existing workspace.
+        '''
+        self.workspace = getExistingWorkspace(
+            self.authentication, 
+            self.programArguments.subid, 
+            self.programArguments.resourceGroup,
+            self.programArguments.workspace,
+            self.job_log
+            )
+
+        return self.workspace != None
 
     def generateWorkspace(self):
         '''
             Gets an existing workspace (by name) or creates a new one
+
+            retrieve_only - If true, worksapce will NOT be created but only
+                            retrieved. 
         '''
         
         self.workspace = getOrCreateWorkspace(

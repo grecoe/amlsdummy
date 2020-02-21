@@ -66,5 +66,5 @@ These settings are used when publishing the Web Service on the AKS cluster.
 |Property|Required|Type|Description|
 |--------|--------|-----|-----------|
 |aks_service_name|Yes|String|The name given to the Azure Machine Learning Web Service that will be created/loaded.|
-|aks_num_replicas|No|Int|If creating a new web service this value IS required.<br><br>The number of containers to spin up on the AKS cluster to service the Real Time Scoring calls to the cluster.|
-|aks_cpu_cores|No|Int|If creating a new web service this value IS required.<br><br>The number of CPU to assign to each container (aks_num_replicas) that will be spun up on the AKS cluster to service the Real Time Scoring calls to the cluster.|
+|aks_num_replicas|Yes|Int|It is good practice to always supply this value as it is required when creating a new webservice. <br><br>The number of containers to spin up on the AKS cluster to service the Real Time Scoring calls to the cluster.|
+|aks_cpu_cores|Yes|Int|It is good practice to always supply this value as it is required when creating a new webservice.<br><br>The number of CPU to assign to each container (aks_num_replicas) that will be spun up on the AKS cluster to service the Real Time Scoring calls to the cluster.|
