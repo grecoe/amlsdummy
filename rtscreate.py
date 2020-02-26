@@ -48,6 +48,7 @@ try:
     program_context.generateExperiment()
     job_log.endStep("Experiment")
 
+  
     '''
         Get or create and AMLS model. 
     '''
@@ -103,7 +104,6 @@ try:
 except Exception as ex:
     job_log.addInfo("An error occured executing this path")
     job_log.addInfo(str(ex))
-    raise ex
 
 job_log.dumpLog()
 

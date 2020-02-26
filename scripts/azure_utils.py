@@ -404,7 +404,7 @@ def createImage(workspace, scoring_file, model, image_name, job_log = None ):
     )
 
     image.wait_for_creation(show_output = True)
-    reportStatus(None, "Image created IMAGE/VERSION: " , image.name, '/',  image.version)
+    reportStatus(None, "Image created IMAGE/VERSION: {}/{}".format(image.name,  image.version))
     
     return image
 
