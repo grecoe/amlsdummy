@@ -104,6 +104,8 @@ try:
 except Exception as ex:
     job_log.addInfo("An error occured executing this path")
     job_log.addInfo(str(ex))
+    print("An error occured executing this path: {}".format(ex))
+    exit(1)
 
 job_log.dumpLog()
 
