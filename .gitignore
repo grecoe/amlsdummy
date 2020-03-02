@@ -13,3 +13,4 @@ dg-ml-cmk-v1-eastus-nocmkaks.json
 dg-ml-cmk-v1-eastus.json
 # Local dev files
 keyvaulttest.py
+attemptDeployOutput.py
