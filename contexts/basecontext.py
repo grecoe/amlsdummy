@@ -1,4 +1,5 @@
 import platform
+import datetime
 from scripts.azure_utils import setContext
 from azureml.core.image import ContainerImage
 from scripts.azure_utils import *
@@ -70,3 +71,49 @@ class BaseContext:
         if not self.experiment:
             raise Exception("Experiment Creation Failed")
 
+    def getExistingExperiment(self):
+        '''
+            Get an existing experiment by name, or create new
+        '''
+        self.experiment = getExistingExperiment(self.workspace, self.programArguments.experiment, self.job_log)
+
+        if not self.experiment:
+            raise Exception("Experiment Collection Failed")
+
+    def cancelExperimentLongRunningRuns(self, hours):
+
+        if not self.experiment:
+            raise Exception("Must have an experiment to get runs")
+        
+        run_list = self.experiment.get_runs()
+        for run in run_list:
+            details = run.get_details()
+
+            print("Checking run ", details['runId'])
+            
+            start_str = details['startTimeUtc']
+            time_start = datetime.datetime.strptime(start_str, '%Y-%m-%dT%H:%M:%S.%fZ')
+            time_now = datetime.datetime.utcnow()
+            
+            if not 'endTimeUtc' in details.keys():
+                cancel = True
+                hours_diff = None
+                print("Run still going....")
+                if 'startTimeUtc' in details.keys():
+                    start_str = details['startTimeUtc']
+                    time_start = datetime.datetime.strptime(start_str, '%Y-%m-%dT%H:%M:%S.%fZ')
+                    time_now = datetime.datetime.utcnow()
+                    time_diff = time_now - time_start
+                    seconds_diff = time_diff.seconds
+                    
+                    if time_diff.days > 0:
+                        seconds_diff += time_diff.days * 86400
+                    
+                    hours_diff = seconds_diff / 3600
+                    if hours_diff < hours:
+                        cancel = False
+
+                if cancel:
+                    str_message = "Run {} going for {} hours marked failed.".format(details['runId'], hours_diff)
+                    print(str_message)
+                    run.fail(error_details = str_message)
