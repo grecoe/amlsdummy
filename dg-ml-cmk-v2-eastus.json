@@ -1,0 +1,18 @@
+{
+    "subid" : "c647028f-2fe0-4de2-b47e-882734a9b02a",
+    "resourceGroup" : "dg-ml-cmk-v2pe2-eastus",
+    "region" : "eastus",
+    "workspace" : "dg-ml-cmk-v22-eastus",
+    "experiment" : "simple_experiment2",
+    "model_name" : "testmodel2",
+    "image_name" : "testimage2",
+    "aks_compute_name" : "cmkaks",
+    "aks_service_name" : "cmkservice2",
+    "aks_non_prod" : "True",
+    "aks_existing_cluster" : "dg-ml-cmk",
+    "aks_existing_rg" : "dg-ml-cmk-eastus-aks",
+    "aks_vm_size" : "",
+    "aks_node_count" : 2,
+    "aks_num_replicas" : 1,
+    "aks_cpu_cores" : 1
+}

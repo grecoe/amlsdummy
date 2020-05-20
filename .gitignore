@@ -5,6 +5,8 @@ contexts/__pycache__/
 simple.yml
 model.pkl
 Logs/
+_cruft/
+connectedvmtest.py
 # Local configuration files
 dantestrts.json
 dantestbatch.json

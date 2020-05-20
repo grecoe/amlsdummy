@@ -90,7 +90,7 @@ class BaseContext:
             details = run.get_details()
 
             print("Checking run ", details['runId'])
-            
+
             start_str = details['startTimeUtc']
             time_start = datetime.datetime.strptime(start_str, '%Y-%m-%dT%H:%M:%S.%fZ')
             time_now = datetime.datetime.utcnow()
@@ -98,6 +98,7 @@ class BaseContext:
             if not 'endTimeUtc' in details.keys():
                 cancel = True
                 hours_diff = None
+                
                 print("Run still going....")
                 if 'startTimeUtc' in details.keys():
                     start_str = details['startTimeUtc']

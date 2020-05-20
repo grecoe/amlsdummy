@@ -1,13 +1,33 @@
 '''
-    Program Code: Delete an RTS Webservice instance from a workspace.
+    Program Code: Explores an experiment and will fail out any runs that 
+                  have lasted longer than some pre-determined amount of time. 
+
+    During some experimentation with customer managed keys, when the storage
+    key is disabled an experiment will be created and a run started but it 
+    throws an exception, I'm guessing because:
+
+    - Experiments are stored in CosmosDB and that is succesful to create.
+    - Run on experiment is started and also tagged in ComsosDB
+    - Actual run needs storage on Azure ML workspace which is not available
+      due to the key being revoked.
+    - Exception is thrown and run will stay in running state indefinitely. 
 
     Program will use settings from argument.py where user can optionally pass in parameters or 
     use the defaults set up. Those parameters and the user authentication are held in the Context class
     defined above. 
 
-    This script will NEVER create any resources. The only side effect is that
-    a web service will be deleted, if found. 
+    This program will NEVER create any resources, what MUST exist are
+
+    - Azure ML Workspace
+    - Experiment (by name)
+
+    From there, all runs for the specified experiment will be stopped if they run
+    longer than a pre-determined amount of time. 
+
+    So, use this judiciously and only on experiments where you KNOW that it's hung.
+    Don't accidentally kill runs that might be OK.
 '''
+
 import os
 import sys 
 import json
