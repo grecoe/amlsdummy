@@ -56,8 +56,8 @@ def loadArguments(sys_args):
     global api_headers
 
     parser = argparse.ArgumentParser(description='Simple model deployment.') 
-    parser.add_argument("-u", required=False, default='http://40.121.6.20:80/api/v1/service/dummycluster/score', type=str, help="Web Service URI") 
-    parser.add_argument("-k", required=False, default="eGKplWLsq0AKDFx8gb5SyaKU8AeoDqOc", type=str, help="Web Service Key") 
+    parser.add_argument("-u", required=False, default='http://52.151.239.210:80/api/v1/service/cmkservice2/score', type=str, help="Web Service URI") 
+    parser.add_argument("-k", required=False, default="oZ67iku9ddYtkJGYwGGNCZc2psT27qoC", type=str, help="Web Service Key") 
     parser.add_argument("-t", required=False, default=20, type=int, help="Thread Count") 
     parser.add_argument("-i", required=False, default=1, type=int, help="Thread Iterations") 
 

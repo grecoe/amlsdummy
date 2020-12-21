@@ -1,0 +1,9 @@
+name: NotebookEnv
+channels:
+  - conda-forge
+dependencies:
+  - python=3.6.2
+  - pip
+  - pip:    
+    - jupyter
+    - nbconvert

@@ -1,6 +1,9 @@
 # Byte-compiled / optimized / DLL files
 scripts/__pycache__/
 contexts/__pycache__/
+# Notebooks
+notebooktests/notebooks/.ipynb_checkpoints
+
 # Generated files running scripts
 simple.yml
 model.pkl

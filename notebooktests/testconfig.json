@@ -1,0 +1,15 @@
+{
+    "notebooks" : [
+        "./notebooks/first.ipynb", 
+        "./notebooks/second.ipynb" 
+    ],
+    "replacements" : [
+        {
+            "tag" :"build_tag",
+            "values" : {
+                "NAME": "Fred",
+                "LOC": "Florida"
+            }
+        }
+    ]
+}

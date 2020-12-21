@@ -32,6 +32,7 @@ When the input data is collected, the batch service would then be triggered to p
 |batchcreate.py|File|Main script for deploying an Azure Machine Learning Batch Scoring service.|
 |rtscreate.py|File|Main script for deploying an Azure Machine Learning Real Time Scoring service.|
 |rtsloadtest.py|File|Script for load testing an Azure Machine Learning Real Time Scoring service.|
+|rtsexploreruns|File|Script for moving an experiment run to completed if it's run longer than 4 hours. Exposed during CMK testing but may prove useful for other scenarios.|
 |LICENSE|File|MIT License for this repository.|
 |README.md|File|The file you are reading now.|
 
