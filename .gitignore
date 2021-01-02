@@ -4,6 +4,7 @@ contexts/__pycache__/
 # Notebooks
 notebooktests/notebooks/.ipynb_checkpoints
 notebooktests/__pycache__/
+notebooktests/utils/__pycache__/
 notebooktests/notebookexecution.log
 
 # Generated files running scripts
