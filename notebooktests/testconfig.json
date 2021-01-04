@@ -10,6 +10,13 @@
                 "NAME": "Fred",
                 "LOC": "Florida"
             }
+        },
+        {
+            "tag" : "second_tag",
+            "values" : {
+                "NAME": "Steve",
+                "LOC": "California"
+            }
         }
     ]
 }

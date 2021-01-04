@@ -8,10 +8,9 @@ class NotebookUtil:
         self.notebook_path = notebook_path
         self.notebook = None
 
-        # Set up trace
+        # Set up trace on class functions, can't use decorator in class itself.
         self._load_notebook = FunctionTrace(self._load_notebook)
         self._split_source = FunctionTrace(self._split_source)
-        #self._split_source_line = FunctionTrace(self._split_source_line)
         self.update_notebook = FunctionTrace(self.update_notebook)
         self.execute = FunctionTrace(self.execute)
 
@@ -74,6 +73,7 @@ class NotebookUtil:
                                     res[0],
                                     '"{}"'.format(replacement) if isinstance(replacement,str) else replacement
                                 )
+                                Logger.add_log("UPDATE {} [{}] = [{}]".format(self.notebook_path,raw_source[line_idx], updated))
                                 raw_source[line_idx] = updated
                                 modified = True
 
