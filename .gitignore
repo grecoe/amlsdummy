@@ -6,6 +6,7 @@ notebooktests/notebooks/.ipynb_checkpoints
 notebooktests/__pycache__/
 notebooktests/utils/__pycache__/
 notebooktests/notebookexecution.log
+sql_storage/utils/__pycache__/
 
 # Generated files running scripts
 simple.yml

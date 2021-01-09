@@ -1,0 +1,2 @@
+DELETE FROM Employee 
+WHERE PersonID=4;
